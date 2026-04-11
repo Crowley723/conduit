@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Crowley723/conduit/internal/models"
+	"github.com/Crowley723/conduit/internal/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -64,4 +65,21 @@ type Provider interface {
 	InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string) (*models.CertificateDownload, error)
 	GetCertificateDownloadAuditLogByID(ctx context.Context, id int) (*models.CertificateDownload, error)
 	GetRecentCertificateDownloadLogs(ctx context.Context, limit int) ([]models.CertificateDownload, error)
+
+	/* Encryption Validation */
+
+	GetEncryptionValidation(ctx context.Context) ([]byte, error)
+	SetEncryptionValidation(ctx context.Context, validationData []byte) error
+	ValidateEncryptionKey(ctx context.Context) error
+
+	/* Certificate Authority */
+
+	InsertCertificateAuthority(ctx context.Context, caCert utils.CertificateData, keyAlgorithm utils.KeyAlgorithm) error
+	GetCertificateAuthority(ctx context.Context) (*utils.CertificateData, utils.KeyAlgorithm, error)
+
+	/* Issued Certificates */
+
+	InsertIssuedCertificate(ctx context.Context, identifier string, certData *utils.CertificateData, caCertPEM []byte, keyAlgorithm utils.KeyAlgorithm, certificateRequestID int, request *models.CertificateRequest) error
+	GetIssuedCertificateByIdentifier(ctx context.Context, identifier string) (certPEM, keyPEM, caPEM []byte, err error)
+	DeleteIssuedCertificate(ctx context.Context, identifier string) error
 }

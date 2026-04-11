@@ -101,7 +101,7 @@ func GenerateCertificate(request *models.CertificateRequest, ca *CertificateData
 		DNSNames:     request.DNSNames,
 	}
 
-	certDER, err := x509.CreateCertificate(rand.Reader, template, template, publicKey(leafKey), leafKey)
+	certDER, err := x509.CreateCertificate(rand.Reader, template, ca.Certificate, publicKey(leafKey), ca.PrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate CA certificate: %w", err)
 	}

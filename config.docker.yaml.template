@@ -131,6 +131,7 @@ storage:
   username: 'your-username'
   password: 'your-password'
   database: 'homelab_dashboard'
+  encryption_key: 'your-base64-encryption-key-here'
 
 authorization:
   group_scopes:
@@ -175,3 +176,24 @@ features:
         max_total_ips: 50
         default_ttl: 720h
         auth_group: "conduit:firewall:vpn_access"
+
+  mtls_management:
+    enabled: false
+    certificate_subject:
+      organization: "Your Organization"
+      country: "US"
+      locality: "Your City"
+      province: "Your State"
+    background_job_config:
+      approved_certificate_polling_interval: 30s
+      issued_certificate_polling_interval: 30s
+    # kubernetes:
+    #   enabled: false
+    #   namespace: "default"
+    #   issuer_ref:
+    #     name: "ca-issuer"
+    #     kind: "ClusterIssuer"
+    #     group: "cert-manager.io"
+    database:
+      enabled: false
+      key_algorithm: "ECDSA-P256"  # Options: RSA-2048, RSA-4096, ECDSA-P256

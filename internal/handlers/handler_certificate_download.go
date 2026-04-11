@@ -187,10 +187,11 @@ func GETCertificateDownload(ctx *middlewares.AppContext) {
 		ctx.SetJSONError(http.StatusBadRequest, "Certificate identifier not found")
 		return
 	}
-
 	certPEM, keyPEM, caPEM, err := ctx.CertificateManager.GetCertificateData(ctx, *request.CertificateIdentifier)
 	if err != nil {
-		ctx.Logger.Error("failed to get certificate data", "error", err, "identifier", *request.CertificateIdentifier)
+		ctx.Logger.Error("failed to get certificate data",
+			"error", err,
+			"identifier", *request.CertificateIdentifier)
 		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 		return
 	}

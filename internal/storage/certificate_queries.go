@@ -2,17 +2,26 @@ package storage
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Crowley723/conduit/internal/models"
 	"github.com/Crowley723/conduit/internal/utils"
 
-	"time"
-
 	"github.com/jackc/pgx/v5"
+)
+
+var (
+	ErrEncryptionValidationNotFound = errors.New("encryption validation not found")
+	ErrCertificateAuthorityNotFound = errors.New("certificate authority not found")
+	ErrIssuedCertificateNotFound    = errors.New("issued certificate not found")
+	ErrInvalidEncryptionKey         = errors.New("invalid encryption key")
+	ErrCertificateAlreadyExists     = errors.New("certificate already exists")
+	ErrKeyAlgorithmMismatch         = errors.New("key algorithm mismatch with existing CA")
 )
 
 // CreateCertificateRequest adds a certificate request to the database.
@@ -666,7 +675,6 @@ func (p *DatabaseProvider) UpdateCertificateRequestIssued(ctx context.Context, r
 		return fmt.Errorf("certificate request %d not found", requestID)
 	}
 
-	// Insert event
 	insertEventQuery := `
 		INSERT INTO certificate_events
 		(certificate_request_id, requester_iss, requester_sub, reviewer_iss, reviewer_sub, new_status, review_notes)
@@ -679,4 +687,313 @@ func (p *DatabaseProvider) UpdateCertificateRequestIssued(ctx context.Context, r
 	}
 
 	return tx.Commit(ctx)
+}
+
+// GetEncryptionValidation retrieves the encrypted validation data
+func (p *DatabaseProvider) GetEncryptionValidation(ctx context.Context) ([]byte, error) {
+	query := `SELECT validation_data FROM encryption LIMIT 1`
+
+	var validationData []byte
+	err := p.pool.QueryRow(ctx, query).Scan(&validationData)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEncryptionValidationNotFound
+		}
+		return nil, fmt.Errorf("failed to get encryption validation: %w", err)
+	}
+
+	return validationData, nil
+}
+
+// SetEncryptionValidation stores the encrypted validation data
+func (p *DatabaseProvider) SetEncryptionValidation(ctx context.Context, validationData []byte) error {
+	query := `
+		INSERT INTO encryption (validation_data, created_at, updated_at)
+		VALUES ($1, NOW(), NOW())
+	`
+
+	_, err := p.pool.Exec(ctx, query, validationData)
+	if err != nil {
+		return fmt.Errorf("failed to set encryption validation: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateEncryptionKey validates that the encryption key can decrypt the stored validation data
+func (p *DatabaseProvider) ValidateEncryptionKey(ctx context.Context) error {
+	if p.encryptionKey == nil {
+		return fmt.Errorf("encryption key not configured")
+	}
+
+	validationData, err := p.GetEncryptionValidation(ctx)
+	if err != nil {
+		if errors.Is(err, ErrEncryptionValidationNotFound) {
+			encrypted, err := p.encrypt([]byte(EncryptionValidationCheckValue))
+			if err != nil {
+				return fmt.Errorf("failed to encrypt validation data: %w", err)
+			}
+
+			if err := p.SetEncryptionValidation(ctx, encrypted); err != nil {
+				return fmt.Errorf("failed to store validation data: %w", err)
+			}
+
+			validationData, err = p.GetEncryptionValidation(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to verify stored validation data: %w", err)
+			}
+		} else {
+			return err
+		}
+	}
+
+	decrypted, err := p.decrypt(validationData)
+	if err != nil {
+		return fmt.Errorf("%w: decryption failed - %v", ErrInvalidEncryptionKey, err)
+	}
+
+	if string(decrypted) != EncryptionValidationCheckValue {
+		return fmt.Errorf("%w: check value mismatch", ErrInvalidEncryptionKey)
+	}
+
+	return nil
+}
+
+// InsertCertificateAuthority inserts a new CA certificate into the database
+func (p *DatabaseProvider) InsertCertificateAuthority(ctx context.Context, caCert utils.CertificateData, keyAlgorithm utils.KeyAlgorithm) error {
+	keyPem, err := utils.PrivateKeyToPEM(caCert.PrivateKey)
+	if err != nil {
+		return fmt.Errorf("failed to convert private key to PEM: %w", err)
+	}
+
+	certPem := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: caCert.Certificate.Raw,
+	})
+
+	encryptedKey, err := p.encrypt(keyPem)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt private key: %w", err)
+	}
+
+	var organization, country, locality, province string
+	if len(caCert.Certificate.Subject.Organization) > 0 {
+		organization = caCert.Certificate.Subject.Organization[0]
+	}
+	if len(caCert.Certificate.Subject.Country) > 0 {
+		country = caCert.Certificate.Subject.Country[0]
+	}
+	if len(caCert.Certificate.Subject.Locality) > 0 {
+		locality = caCert.Certificate.Subject.Locality[0]
+	}
+	if len(caCert.Certificate.Subject.Province) > 0 {
+		province = caCert.Certificate.Subject.Province[0]
+	}
+
+	query := `
+		INSERT INTO certificate_authority (is_active, cert_pem, key_pem, ca_pem, common_name, organization, country, locality, province, serial_number, key_algorithm, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+
+	_, err = p.pool.Exec(ctx, query,
+		true,
+		certPem,
+		encryptedKey,
+		certPem,
+		caCert.Certificate.Subject.CommonName,
+		organization,
+		country,
+		locality,
+		province,
+		caCert.Certificate.SerialNumber.String(),
+		string(keyAlgorithm),
+		caCert.Certificate.NotAfter,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to insert certificate authority: %w", err)
+	}
+
+	return nil
+}
+
+// GetCertificateAuthority retrieves the active CA certificate and decrypted private key
+func (p *DatabaseProvider) GetCertificateAuthority(ctx context.Context) (*utils.CertificateData, utils.KeyAlgorithm, error) {
+	query := `
+		SELECT cert_pem, key_pem, key_algorithm
+		FROM certificate_authority
+		WHERE is_active = true
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	var certPem, encryptedKeyPem []byte
+	var keyAlgorithmStr string
+
+	err := p.pool.QueryRow(ctx, query).Scan(&certPem, &encryptedKeyPem, &keyAlgorithmStr)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, "", ErrCertificateAuthorityNotFound
+		}
+		return nil, "", fmt.Errorf("failed to get certificate authority: %w", err)
+	}
+
+	keyPem, err := p.decrypt(encryptedKeyPem)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to decrypt CA private key: %w", err)
+	}
+
+	certBlock, _ := pem.Decode(certPem)
+	if certBlock == nil {
+		return nil, "", fmt.Errorf("failed to decode certificate PEM")
+	}
+
+	cert, err := x509.ParseCertificate(certBlock.Bytes)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to parse certificate: %w", err)
+	}
+
+	privateKey, err := utils.PrivateKeyFromPEM(keyPem)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to parse private key: %w", err)
+	}
+
+	keyAlgorithm, err := utils.ParseKeyAlgorithm(keyAlgorithmStr)
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid key algorithm in database: %w", err)
+	}
+
+	return &utils.CertificateData{
+		Certificate: cert,
+		PrivateKey:  privateKey,
+	}, keyAlgorithm, nil
+}
+
+// InsertIssuedCertificate stores an issued certificate with encrypted private key
+func (p *DatabaseProvider) InsertIssuedCertificate(
+	ctx context.Context,
+	identifier string,
+	certData *utils.CertificateData,
+	caCertPEM []byte,
+	keyAlgorithm utils.KeyAlgorithm,
+	certificateRequestID int,
+	request *models.CertificateRequest,
+) error {
+	certPem := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certData.Certificate.Raw,
+	})
+
+	keyPem, err := utils.PrivateKeyToPEM(certData.PrivateKey)
+	if err != nil {
+		return fmt.Errorf("failed to convert private key to PEM: %w", err)
+	}
+
+	encryptedKey, err := p.encrypt(keyPem)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt private key: %w", err)
+	}
+
+	var organization, country, locality, province string
+	if len(certData.Certificate.Subject.Organization) > 0 {
+		organization = certData.Certificate.Subject.Organization[0]
+	}
+	if len(certData.Certificate.Subject.Country) > 0 {
+		country = certData.Certificate.Subject.Country[0]
+	}
+	if len(certData.Certificate.Subject.Locality) > 0 {
+		locality = certData.Certificate.Subject.Locality[0]
+	}
+	if len(certData.Certificate.Subject.Province) > 0 {
+		province = certData.Certificate.Subject.Province[0]
+	}
+
+	query := `
+		INSERT INTO issued_certificates (
+			identifier, cert_pem, key_pem, ca_pem,
+			common_name, organization, country, locality, province,
+			dns_names, organizational_units, serial_number, key_algorithm,
+			certificate_request_id, expires_at, created_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+	`
+
+	_, err = p.pool.Exec(ctx, query,
+		identifier,
+		certPem,
+		encryptedKey,
+		caCertPEM,
+		certData.Certificate.Subject.CommonName,
+		organization,
+		country,
+		locality,
+		province,
+		request.DNSNames,
+		request.OrganizationalUnits,
+		certData.Certificate.SerialNumber.String(),
+		string(keyAlgorithm),
+		certificateRequestID,
+		certData.Certificate.NotAfter,
+	)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return ErrCertificateAlreadyExists
+		}
+		return fmt.Errorf("failed to insert issued certificate: %w", err)
+	}
+
+	return nil
+}
+
+// GetIssuedCertificateByIdentifier retrieves an issued certificate with decrypted private key
+func (p *DatabaseProvider) GetIssuedCertificateByIdentifier(
+	ctx context.Context,
+	identifier string,
+) (certPEM, keyPEM, caPEM []byte, err error) {
+	query := `
+		SELECT cert_pem, key_pem, ca_pem
+		FROM issued_certificates
+		WHERE identifier = $1 AND deleted_at IS NULL
+	`
+
+	var encryptedKeyPEM []byte
+	err = p.pool.QueryRow(ctx, query, identifier).Scan(&certPEM, &encryptedKeyPEM, &caPEM)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, nil, ErrIssuedCertificateNotFound
+		}
+		return nil, nil, nil, fmt.Errorf("failed to get issued certificate: %w", err)
+	}
+
+	if encryptedKeyPEM == nil {
+		return nil, nil, nil, fmt.Errorf("certificate has been deleted")
+	}
+
+	keyPEM, err = p.decrypt(encryptedKeyPEM)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to decrypt private key: %w", err)
+	}
+
+	return certPEM, keyPEM, caPEM, nil
+}
+
+// DeleteIssuedCertificate soft-deletes an issued certificate by setting key_pem to NULL and deleted_at timestamp
+func (p *DatabaseProvider) DeleteIssuedCertificate(ctx context.Context, identifier string) error {
+	query := `
+		UPDATE issued_certificates
+		SET key_pem = NULL, deleted_at = NOW()
+		WHERE identifier = $1 AND deleted_at IS NULL
+	`
+
+	result, err := p.pool.Exec(ctx, query, identifier)
+	if err != nil {
+		return fmt.Errorf("failed to delete issued certificate: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrIssuedCertificateNotFound
+	}
+
+	return nil
 }

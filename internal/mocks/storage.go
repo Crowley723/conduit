@@ -16,6 +16,7 @@ import (
 	time "time"
 
 	models "github.com/Crowley723/conduit/internal/models"
+	utils "github.com/Crowley723/conduit/internal/utils"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -130,6 +131,20 @@ func (mr *MockStorageProviderMockRecorder) DeleteExpiredDownloadTokens(ctx any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredDownloadTokens", reflect.TypeOf((*MockStorageProvider)(nil).DeleteExpiredDownloadTokens), ctx)
 }
 
+// DeleteIssuedCertificate mocks base method.
+func (m *MockStorageProvider) DeleteIssuedCertificate(ctx context.Context, identifier string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteIssuedCertificate", ctx, identifier)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteIssuedCertificate indicates an expected call of DeleteIssuedCertificate.
+func (mr *MockStorageProviderMockRecorder) DeleteIssuedCertificate(ctx, identifier any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIssuedCertificate", reflect.TypeOf((*MockStorageProvider)(nil).DeleteIssuedCertificate), ctx, identifier)
+}
+
 // DeleteServiceAccount mocks base method.
 func (m *MockStorageProvider) DeleteServiceAccount(ctx context.Context, iss, sub string) error {
 	m.ctrl.T.Helper()
@@ -216,6 +231,22 @@ func (mr *MockStorageProviderMockRecorder) GetApprovedCertificateRequests(ctx an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApprovedCertificateRequests", reflect.TypeOf((*MockStorageProvider)(nil).GetApprovedCertificateRequests), ctx)
 }
 
+// GetCertificateAuthority mocks base method.
+func (m *MockStorageProvider) GetCertificateAuthority(ctx context.Context) (*utils.CertificateData, utils.KeyAlgorithm, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCertificateAuthority", ctx)
+	ret0, _ := ret[0].(*utils.CertificateData)
+	ret1, _ := ret[1].(utils.KeyAlgorithm)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetCertificateAuthority indicates an expected call of GetCertificateAuthority.
+func (mr *MockStorageProviderMockRecorder) GetCertificateAuthority(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificateAuthority", reflect.TypeOf((*MockStorageProvider)(nil).GetCertificateAuthority), ctx)
+}
+
 // GetCertificateDownloadAuditLogByID mocks base method.
 func (m *MockStorageProvider) GetCertificateDownloadAuditLogByID(ctx context.Context, id int) (*models.CertificateDownload, error) {
 	m.ctrl.T.Helper()
@@ -289,6 +320,38 @@ func (m *MockStorageProvider) GetCertificateRequestsPaginated(ctx context.Contex
 func (mr *MockStorageProviderMockRecorder) GetCertificateRequestsPaginated(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificateRequestsPaginated", reflect.TypeOf((*MockStorageProvider)(nil).GetCertificateRequestsPaginated), ctx, params)
+}
+
+// GetEncryptionValidation mocks base method.
+func (m *MockStorageProvider) GetEncryptionValidation(ctx context.Context) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEncryptionValidation", ctx)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEncryptionValidation indicates an expected call of GetEncryptionValidation.
+func (mr *MockStorageProviderMockRecorder) GetEncryptionValidation(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEncryptionValidation", reflect.TypeOf((*MockStorageProvider)(nil).GetEncryptionValidation), ctx)
+}
+
+// GetIssuedCertificateByIdentifier mocks base method.
+func (m *MockStorageProvider) GetIssuedCertificateByIdentifier(ctx context.Context, identifier string) ([]byte, []byte, []byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIssuedCertificateByIdentifier", ctx, identifier)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].([]byte)
+	ret2, _ := ret[2].([]byte)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetIssuedCertificateByIdentifier indicates an expected call of GetIssuedCertificateByIdentifier.
+func (mr *MockStorageProviderMockRecorder) GetIssuedCertificateByIdentifier(ctx, identifier any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIssuedCertificateByIdentifier", reflect.TypeOf((*MockStorageProvider)(nil).GetIssuedCertificateByIdentifier), ctx, identifier)
 }
 
 // GetPendingCertificateRequests mocks base method.
@@ -426,6 +489,34 @@ func (mr *MockStorageProviderMockRecorder) InsertAuditLogCertificateDownload(ctx
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuditLogCertificateDownload", reflect.TypeOf((*MockStorageProvider)(nil).InsertAuditLogCertificateDownload), ctx, certId, sub, iss, ipAddress, rawUserAgent)
 }
 
+// InsertCertificateAuthority mocks base method.
+func (m *MockStorageProvider) InsertCertificateAuthority(ctx context.Context, caCert utils.CertificateData, keyAlgorithm utils.KeyAlgorithm) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertCertificateAuthority", ctx, caCert, keyAlgorithm)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertCertificateAuthority indicates an expected call of InsertCertificateAuthority.
+func (mr *MockStorageProviderMockRecorder) InsertCertificateAuthority(ctx, caCert, keyAlgorithm any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertCertificateAuthority", reflect.TypeOf((*MockStorageProvider)(nil).InsertCertificateAuthority), ctx, caCert, keyAlgorithm)
+}
+
+// InsertIssuedCertificate mocks base method.
+func (m *MockStorageProvider) InsertIssuedCertificate(ctx context.Context, identifier string, certData *utils.CertificateData, caCertPEM []byte, keyAlgorithm utils.KeyAlgorithm, certificateRequestID int, request *models.CertificateRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertIssuedCertificate", ctx, identifier, certData, caCertPEM, keyAlgorithm, certificateRequestID, request)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertIssuedCertificate indicates an expected call of InsertIssuedCertificate.
+func (mr *MockStorageProviderMockRecorder) InsertIssuedCertificate(ctx, identifier, certData, caCertPEM, keyAlgorithm, certificateRequestID, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertIssuedCertificate", reflect.TypeOf((*MockStorageProvider)(nil).InsertIssuedCertificate), ctx, identifier, certData, caCertPEM, keyAlgorithm, certificateRequestID, request)
+}
+
 // PauseServiceAccount mocks base method.
 func (m *MockStorageProvider) PauseServiceAccount(ctx context.Context, iss, sub string) error {
 	m.ctrl.T.Helper()
@@ -494,6 +585,20 @@ func (m *MockStorageProvider) RunUpMigrations(ctx context.Context, targetVersion
 func (mr *MockStorageProviderMockRecorder) RunUpMigrations(ctx, targetVersion any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunUpMigrations", reflect.TypeOf((*MockStorageProvider)(nil).RunUpMigrations), ctx, targetVersion)
+}
+
+// SetEncryptionValidation mocks base method.
+func (m *MockStorageProvider) SetEncryptionValidation(ctx context.Context, validationData []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetEncryptionValidation", ctx, validationData)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetEncryptionValidation indicates an expected call of SetEncryptionValidation.
+func (mr *MockStorageProviderMockRecorder) SetEncryptionValidation(ctx, validationData any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEncryptionValidation", reflect.TypeOf((*MockStorageProvider)(nil).SetEncryptionValidation), ctx, validationData)
 }
 
 // UnpauseServiceAccount mocks base method.
@@ -565,4 +670,18 @@ func (m *MockStorageProvider) UpsertUser(ctx context.Context, sub, iss, username
 func (mr *MockStorageProviderMockRecorder) UpsertUser(ctx, sub, iss, username, displayName, email, groups any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertUser", reflect.TypeOf((*MockStorageProvider)(nil).UpsertUser), ctx, sub, iss, username, displayName, email, groups)
+}
+
+// ValidateEncryptionKey mocks base method.
+func (m *MockStorageProvider) ValidateEncryptionKey(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateEncryptionKey", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateEncryptionKey indicates an expected call of ValidateEncryptionKey.
+func (mr *MockStorageProviderMockRecorder) ValidateEncryptionKey(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateEncryptionKey", reflect.TypeOf((*MockStorageProvider)(nil).ValidateEncryptionKey), ctx)
 }

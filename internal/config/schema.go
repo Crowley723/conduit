@@ -133,11 +133,12 @@ var DefaultDistributedConfig = DistributedConfig{
 }
 
 type StorageConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
+	Host          string `yaml:"host"`
+	Port          int    `yaml:"port"`
+	Username      string `yaml:"username"`
+	Password      string `yaml:"password"`
+	Database      string `yaml:"database"`
+	EncryptionKey string `yaml:"encryption_key"`
 }
 
 type MTLSManagement struct {
@@ -150,6 +151,7 @@ type MTLSManagement struct {
 	CertificateSubject              *CertificateSubject      `yaml:"certificate_subject,omitempty"`
 	BackgroundJobConfig             *MTLSBackgroundJobConfig `yaml:"background_job_config,omitempty"`
 	Kubernetes                      *KubernetesConfig        `yaml:"kubernetes,omitempty"`
+	Database                        *DatabaseConfig          `yaml:"database,omitempty"`
 }
 
 type KubernetesConfig struct {
@@ -170,6 +172,16 @@ var DefaultMTLSManagementKubernetesConfig = &KubernetesConfig{
 type CertificateIssuer struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
+}
+
+type DatabaseConfig struct {
+	Enabled      bool   `yaml:"enabled"`
+	KeyAlgorithm string `yaml:"key_algorithm"`
+}
+
+var DefaultMTLSManagementDatabaseConfig = &DatabaseConfig{
+	Enabled:      false,
+	KeyAlgorithm: "ECDSA-P256",
 }
 
 type CertificateSubject struct {

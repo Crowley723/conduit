@@ -18,6 +18,7 @@ import (
 	"github.com/Crowley723/conduit/internal/middlewares"
 	"github.com/Crowley723/conduit/internal/services/certificate"
 	"github.com/Crowley723/conduit/internal/storage"
+	"github.com/Crowley723/conduit/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -122,8 +123,23 @@ func New(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 				cancel()
 				return nil, err
 			}
-		} else {
+			logger.Debug("Kubernetes Certificate Provider Initialized")
+		} else if cfg.MTLS.Database != nil && cfg.MTLS.Database.Enabled {
+			keyAlgorithm, err := utils.ParseKeyAlgorithm(cfg.MTLS.Database.KeyAlgorithm)
+			if err != nil {
+				logger.Error("failed to parse mtls.database.key_algorithm", "error", err)
+				cancel()
+				return nil, err
+			}
 
+			certProvider = certificate.NewDatabaseProvider(database, keyAlgorithm, cfg.MTLS.CertificateSubject)
+
+			if err := certProvider.(*certificate.DatabaseProvider).StartupCheck(ctx); err != nil {
+				logger.Error("database certificate provider startup check failed", "error", err)
+				cancel()
+				return nil, err
+			}
+			logger.Debug("Database Certificate Provider Initialized")
 		}
 	}
 

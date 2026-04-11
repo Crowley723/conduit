@@ -54,6 +54,7 @@ var (
 	EnvStorageUsername          = "CONDUIT_STORAGE_USERNAME"
 	EnvStoragePassword          = "CONDUIT_STORAGE_PASSWORD"
 	EnvStorageDatabase          = "CONDUIT_STORAGE_DATABASE"
+	EnvStorageEncryptionKey     = "CONDUIT_STORAGE_ENCRYPTION_KEY"
 )
 
 func applyEnvironmentOverrides(config *Config) {
@@ -146,6 +147,13 @@ func applyEnvironmentOverrides(config *Config) {
 			config.Storage = &StorageConfig{}
 		}
 		config.Storage.Database = database
+	}
+
+	if encryptionKey := os.Getenv(EnvStorageEncryptionKey); encryptionKey != "" {
+		if config.Storage == nil {
+			config.Storage = &StorageConfig{}
+		}
+		config.Storage.EncryptionKey = encryptionKey
 	}
 }
 
@@ -495,6 +503,33 @@ func (c *Config) validateMTLSKubernetesConfig() error {
 		return nil
 	}
 
+	kubernetesEnabled := c.MTLS.Kubernetes != nil && c.MTLS.Kubernetes.Enabled
+	databaseEnabled := c.MTLS.Database != nil && c.MTLS.Database.Enabled
+
+	if kubernetesEnabled && databaseEnabled {
+		return fmt.Errorf("mtls.kubernetes and mtls.database cannot both be enabled")
+	}
+
+	if !kubernetesEnabled && !databaseEnabled {
+		return fmt.Errorf("one of mtls.kubernetes or mtls.database must be enabled when mtls is enabled")
+	}
+
+	if kubernetesEnabled {
+		if err := c.validateMTLSKubernetesIssuerConfig(); err != nil {
+			return err
+		}
+	}
+
+	if databaseEnabled {
+		if err := c.validateMTLSDatabaseConfig(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Config) validateMTLSKubernetesIssuerConfig() error {
 	if c.MTLS.Kubernetes.Issuer == nil {
 		return fmt.Errorf("mtls.kubernetes.issuer is required when mtls.kubernetes is enabled")
 	}
@@ -510,6 +545,38 @@ func (c *Config) validateMTLSKubernetesConfig() error {
 	kind := c.MTLS.Kubernetes.Issuer.Kind
 	if kind != "Issuer" && kind != "ClusterIssuer" {
 		return fmt.Errorf("mtls.kubernetes.issuer.kind must be either 'Issuer' or 'ClusterIssuer', got '%s'", kind)
+	}
+
+	return nil
+}
+
+func (c *Config) validateMTLSDatabaseConfig() error {
+	if c.MTLS.Database == nil || !c.MTLS.Database.Enabled {
+		return nil
+	}
+
+	if c.Storage == nil {
+		return fmt.Errorf("storage is required when mtls.database is enabled")
+	}
+
+	if c.Storage.EncryptionKey == "" {
+		return fmt.Errorf("storage.encryption_key is required when mtls.database is enabled")
+	}
+
+	if c.MTLS.Database.KeyAlgorithm != "" {
+		validAlgorithms := []string{"RSA-2048", "RSA-4096", "ECDSA-P256"}
+		valid := false
+		for _, alg := range validAlgorithms {
+			if c.MTLS.Database.KeyAlgorithm == alg {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("mtls.database.key_algorithm must be one of: RSA-2048, RSA-4096, ECDSA-P256 (got '%s')", c.MTLS.Database.KeyAlgorithm)
+		}
+	} else {
+		c.MTLS.Database.KeyAlgorithm = DefaultMTLSManagementDatabaseConfig.KeyAlgorithm
 	}
 
 	return nil

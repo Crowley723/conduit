@@ -2,6 +2,7 @@ package certificate
 
 import (
 	"context"
+
 	"github.com/Crowley723/conduit/internal/models"
 )
 

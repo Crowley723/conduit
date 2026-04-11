@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -21,11 +22,14 @@ import (
 //go:embed migrations/*
 var migrationsFS embed.FS
 
-const latestMigrationVersion = 1
+const latestMigrationVersion = 4
+const EncryptionValidationCheckValue = "conduit-encryption-validation-v1"
 
 type DatabaseProvider struct {
 	pool *pgxpool.Pool
 	cfg  *config.Config
+
+	encryptionKey []byte
 }
 
 func NewStorageProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
@@ -38,7 +42,19 @@ func NewStorageProvider(ctx context.Context, cfg *config.Config) (Provider, erro
 		return nil, simplifyDatabaseError(err)
 	}
 
-	return &DatabaseProvider{pool: pPool, cfg: cfg}, nil
+	var encryptionKey []byte
+	if cfg.Storage != nil && cfg.Storage.EncryptionKey != "" {
+		encryptionKey, err = utils.ParseEncryptionKey(cfg.Storage.EncryptionKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse encryption key: %w", err)
+		}
+	}
+
+	return &DatabaseProvider{
+		pool:          pPool,
+		cfg:           cfg,
+		encryptionKey: encryptionKey,
+	}, nil
 }
 
 func simplifyDatabaseError(err error) error {
@@ -347,4 +363,12 @@ func (p *DatabaseProvider) GetSystemUser(ctx context.Context) (iss, sub string, 
 	}
 
 	return iss, sub, err
+}
+
+func (p *DatabaseProvider) encrypt(plaintext []byte) ([]byte, error) {
+	return utils.Encrypt(plaintext, p.encryptionKey)
+}
+
+func (p *DatabaseProvider) decrypt(ciphertext []byte) ([]byte, error) {
+	return utils.Decrypt(ciphertext, p.encryptionKey)
 }
