@@ -2,13 +2,14 @@ package config
 
 import (
 	"fmt"
-	"github.com/Crowley723/conduit/internal/authorization"
 	"log/slog"
 	"net"
 	"os"
 	"slices"
 	"strconv"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/authorization"
 
 	"gopkg.in/yaml.v3"
 )
@@ -39,26 +40,20 @@ func LoadConfig(configPath string) (*Config, error) {
 }
 
 var (
-	EnvOIDCClientID             = "DASHBOARD_OIDC_CLIENT_ID"
-	EnvOIDCClientSecret         = "DASHBOARD_OIDC_CLIENT_SECRET"
-	EnvOIDCIssuerURL            = "DASHBOARD_OIDC_ISSUER_URL"
-	EnvOIDCRedirectURL          = "DASHBOARD_OIDC_REDIRECT_URL"
-	EnvDataPrometheusURL        = "DASHBOARD_DATA_PROMETHEUS_URL"
-	EnvDataBasicAuthUsername    = "DASHBOARD_DATA_BASIC_AUTH_USERNAME"
-	EnvDataBasicAuthPassword    = "DASHBOARD_DATA_BASIC_AUTH_PASSWORD"
-	EnvRedisPassword            = "DASHBOARD_REDIS_PASSWORD"
-	EnvRedisUsername            = "DASHBOARD_REDIS_USERNAME"
-	EnvRedisSentinelUsername    = "DASHBOARD_REDIS_SENTINEL_USERNAME"
-	EnvRedisSentinelPassword    = "DASHBOARD_REDIS_SENTINEL_PASSWORD"
-	EnvMTLSDownloadTokenHMACKey = "DASHBOARD_MTLS_DOWNLOAD_TOKEN_HMAC_KEY"
-	EnvStorageHost              = "DASHBOARD_STORAGE_HOST"
-	EnvStoragePort              = "DASHBOARD_STORAGE_PORT"
-	EnvStorageUsername          = "DASHBOARD_STORAGE_USERNAME"
-	EnvStoragePassword          = "DASHBOARD_STORAGE_PASSWORD"
-	EnvStorageDatabase          = "DASHBOARD_STORAGE_DATABASE"
-	EnvFirewallRouterEndpoint   = "DASHBOARD_FIREWALL_ROUTER_ENDPOINT"
-	EnvFirewallRouterAPIKey     = "DASHBOARD_FIREWALL_ROUTER_API_KEY"
-	EnvFirewallRouterAPISecret  = "DASHBOARD_FIREWALL_ROUTER_API_SECRET"
+	EnvOIDCClientID             = "CONDUIT_OIDC_CLIENT_ID"
+	EnvOIDCClientSecret         = "CONDUIT_OIDC_CLIENT_SECRET"
+	EnvOIDCIssuerURL            = "CONDUIT_OIDC_ISSUER_URL"
+	EnvOIDCRedirectURL          = "CONDUIT_OIDC_REDIRECT_URL"
+	EnvRedisPassword            = "CONDUIT_REDIS_PASSWORD"
+	EnvRedisUsername            = "CONDUIT_REDIS_USERNAME"
+	EnvRedisSentinelUsername    = "CONDUIT_REDIS_SENTINEL_USERNAME"
+	EnvRedisSentinelPassword    = "CONDUIT_REDIS_SENTINEL_PASSWORD"
+	EnvMTLSDownloadTokenHMACKey = "CONDUIT_MTLS_DOWNLOAD_TOKEN_HMAC_KEY"
+	EnvStorageHost              = "CONDUIT_STORAGE_HOST"
+	EnvStoragePort              = "CONDUIT_STORAGE_PORT"
+	EnvStorageUsername          = "CONDUIT_STORAGE_USERNAME"
+	EnvStoragePassword          = "CONDUIT_STORAGE_PASSWORD"
+	EnvStorageDatabase          = "CONDUIT_STORAGE_DATABASE"
 )
 
 func applyEnvironmentOverrides(config *Config) {
@@ -76,24 +71,6 @@ func applyEnvironmentOverrides(config *Config) {
 
 	if redirectURL := os.Getenv(EnvOIDCRedirectURL); redirectURL != "" {
 		config.OIDC.RedirectURI = redirectURL
-	}
-
-	if prometheusURL := os.Getenv(EnvDataPrometheusURL); prometheusURL != "" {
-		config.Data.PrometheusURL = prometheusURL
-	}
-
-	if username := os.Getenv(EnvDataBasicAuthUsername); username != "" {
-		if config.Data.BasicAuth == nil {
-			config.Data.BasicAuth = &BasicAuth{}
-		}
-		config.Data.BasicAuth.Username = username
-	}
-
-	if password := os.Getenv(EnvDataBasicAuthPassword); password != "" {
-		if config.Data.BasicAuth == nil {
-			config.Data.BasicAuth = &BasicAuth{}
-		}
-		config.Data.BasicAuth.Password = password
 	}
 
 	if redisPassword := os.Getenv(EnvRedisPassword); redisPassword != "" {
@@ -173,27 +150,6 @@ func applyEnvironmentOverrides(config *Config) {
 		}
 		config.Storage.Database = database
 	}
-
-	if endpoint := os.Getenv(EnvFirewallRouterEndpoint); endpoint != "" {
-		if config.Features == nil {
-			config.Features = &FeaturesConfig{}
-		}
-		config.Features.FirewallManagement.RouterEndpoint = endpoint
-	}
-
-	if apiKey := os.Getenv(EnvFirewallRouterAPIKey); apiKey != "" {
-		if config.Features == nil {
-			config.Features = &FeaturesConfig{}
-		}
-		config.Features.FirewallManagement.RouterAPIKey = apiKey
-	}
-
-	if apiSecret := os.Getenv(EnvFirewallRouterAPISecret); apiSecret != "" {
-		if config.Features == nil {
-			config.Features = &FeaturesConfig{}
-		}
-		config.Features.FirewallManagement.RouterAPISecret = apiSecret
-	}
 }
 
 func validateConfig(config *Config) error {
@@ -223,7 +179,7 @@ func validateConfig(config *Config) error {
 		return err
 	}
 
-	if config.Cache.Type == "redis" || config.Sessions.Store == "redis" {
+	if config.Sessions.Store == "redis" {
 		err = config.validateRedisConfig()
 		if err != nil {
 			return err

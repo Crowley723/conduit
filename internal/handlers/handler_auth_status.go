@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/Crowley723/conduit/internal/middlewares"
 	"github.com/Crowley723/conduit/internal/models"
-	"net/http"
 )
 
 type ConfigResponse struct {
@@ -39,12 +40,6 @@ func GETAuthStatusHandler(ctx *middlewares.AppContext) {
 
 	if ctx.Config.Features != nil && ctx.Config.Features.MTLSManagement.Enabled {
 		config.MTLS = MTLSConfigResponse{
-			Enabled: true,
-		}
-	}
-
-	if ctx.Config.Features != nil && ctx.Config.Features.FirewallManagement.Enabled {
-		config.Firewall = FirewallConfigResponse{
 			Enabled: true,
 		}
 	}

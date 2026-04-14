@@ -2,9 +2,10 @@ package storage
 
 import (
 	"context"
-	"github.com/Crowley723/conduit/internal/models"
 	"log/slog"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/models"
 
 	"github.com/avct/uasurfer"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -51,32 +52,9 @@ type Provider interface {
 	DisableServiceAccount(ctx context.Context, iss string, sub string) error
 	EnableServiceAccount(ctx context.Context, iss, sub string) error
 
-	/* Firewall Alias Queries */
-
-	AddIPToWhitelist(ctx context.Context, ownerIss, ownerSub, aliasName, aliasUUID, ipAddress, description string, expiresAt *time.Time, clientIP, userAgent *string) (*models.FirewallIPWhitelistEntry, error)
-	GetAllWhitelistEntries(ctx context.Context) ([]*models.FirewallIPWhitelistEntry, error)
-	GetWhitelistEntryByID(ctx context.Context, id int) (*models.FirewallIPWhitelistEntry, error)
-	GetUserWhitelistEntries(ctx context.Context, ownerIss, ownerSub string) ([]*models.FirewallIPWhitelistEntry, error)
-	RemoveIPFromWhitelist(ctx context.Context, id int, ownerIss, ownerSub string, clientIP, userAgent *string) error
-
-	BlacklistIP(ctx context.Context, id int, adminIss, adminSub, reason string) error
-	BlacklistIPAddress(ctx context.Context, aliasUUID, ipAddress, adminIss, adminSub, reason string) (int, error)
-	//GetBlacklistedIPs(ctx context.Context, aliasUUID string) ([]*models.FirewallIPWhitelistEntry, error)
-	IsIPBlacklisted(ctx context.Context, aliasName, ipAddress string) (bool, error)
-
-	GetPendingIPs(ctx context.Context, aliasUUID string) ([]*models.FirewallIPWhitelistEntry, error)
-	MarkIPsAsAdded(ctx context.Context, ids []int, systemUserIss, systemUserSub string) error
-	ExpireOldIPs(ctx context.Context, systemUserIss, systemUserSub string) (int, error)
-
-	CountUserActiveIPs(ctx context.Context, ownerIss, ownerSub, aliasUUID string) (int, error)
-	CountTotalActiveIPs(ctx context.Context, aliasUUID string) (int, error)
-
 	/* Audit Log Queries */
 
 	InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string, userAgent uasurfer.UserAgent) (*models.CertificateDownload, error)
 	GetCertificateDownloadAuditLogByID(ctx context.Context, id int) (*models.CertificateDownload, error)
 	GetRecentCertificateDownloadLogs(ctx context.Context, limit int) ([]models.CertificateDownload, error)
-
-	CreateWhitelistEvent(ctx context.Context, whitelistID int, actorIss, actorSub, eventType, notes string, clientIP, userAgent *string) error
-	GetWhitelistEventsByEntry(ctx context.Context, whitelistID int) ([]*models.FirewallIPWhitelistEvent, error)
 }

@@ -21,7 +21,6 @@ func setupRouter(ctx *middlewares.AppContext) *chi.Mux {
 	r.Use(middlewares.ClientIPMiddleware)
 	//r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middlewares.MetricsMiddleware)
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Use(ctx.SessionManager.LoadAndSave)

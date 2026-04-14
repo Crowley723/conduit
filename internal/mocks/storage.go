@@ -45,50 +45,6 @@ func (m *MockStorageProvider) EXPECT() *MockStorageProviderMockRecorder {
 	return m.recorder
 }
 
-// AddIPToWhitelist mocks base method.
-func (m *MockStorageProvider) AddIPToWhitelist(ctx context.Context, ownerIss, ownerSub, aliasName, aliasUUID, ipAddress, description string, expiresAt *time.Time, clientIP, userAgent *string) (*models.FirewallIPWhitelistEntry, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddIPToWhitelist", ctx, ownerIss, ownerSub, aliasName, aliasUUID, ipAddress, description, expiresAt, clientIP, userAgent)
-	ret0, _ := ret[0].(*models.FirewallIPWhitelistEntry)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// AddIPToWhitelist indicates an expected call of AddIPToWhitelist.
-func (mr *MockStorageProviderMockRecorder) AddIPToWhitelist(ctx, ownerIss, ownerSub, aliasName, aliasUUID, ipAddress, description, expiresAt, clientIP, userAgent any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddIPToWhitelist", reflect.TypeOf((*MockStorageProvider)(nil).AddIPToWhitelist), ctx, ownerIss, ownerSub, aliasName, aliasUUID, ipAddress, description, expiresAt, clientIP, userAgent)
-}
-
-// BlacklistIP mocks base method.
-func (m *MockStorageProvider) BlacklistIP(ctx context.Context, id int, adminIss, adminSub, reason string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BlacklistIP", ctx, id, adminIss, adminSub, reason)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// BlacklistIP indicates an expected call of BlacklistIP.
-func (mr *MockStorageProviderMockRecorder) BlacklistIP(ctx, id, adminIss, adminSub, reason any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlacklistIP", reflect.TypeOf((*MockStorageProvider)(nil).BlacklistIP), ctx, id, adminIss, adminSub, reason)
-}
-
-// BlacklistIPAddress mocks base method.
-func (m *MockStorageProvider) BlacklistIPAddress(ctx context.Context, aliasUUID, ipAddress, adminIss, adminSub, reason string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BlacklistIPAddress", ctx, aliasUUID, ipAddress, adminIss, adminSub, reason)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// BlacklistIPAddress indicates an expected call of BlacklistIPAddress.
-func (mr *MockStorageProviderMockRecorder) BlacklistIPAddress(ctx, aliasUUID, ipAddress, adminIss, adminSub, reason any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlacklistIPAddress", reflect.TypeOf((*MockStorageProvider)(nil).BlacklistIPAddress), ctx, aliasUUID, ipAddress, adminIss, adminSub, reason)
-}
-
 // Close mocks base method.
 func (m *MockStorageProvider) Close() {
 	m.ctrl.T.Helper()
@@ -99,36 +55,6 @@ func (m *MockStorageProvider) Close() {
 func (mr *MockStorageProviderMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStorageProvider)(nil).Close))
-}
-
-// CountTotalActiveIPs mocks base method.
-func (m *MockStorageProvider) CountTotalActiveIPs(ctx context.Context, aliasUUID string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CountTotalActiveIPs", ctx, aliasUUID)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CountTotalActiveIPs indicates an expected call of CountTotalActiveIPs.
-func (mr *MockStorageProviderMockRecorder) CountTotalActiveIPs(ctx, aliasUUID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountTotalActiveIPs", reflect.TypeOf((*MockStorageProvider)(nil).CountTotalActiveIPs), ctx, aliasUUID)
-}
-
-// CountUserActiveIPs mocks base method.
-func (m *MockStorageProvider) CountUserActiveIPs(ctx context.Context, ownerIss, ownerSub, aliasUUID string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CountUserActiveIPs", ctx, ownerIss, ownerSub, aliasUUID)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CountUserActiveIPs indicates an expected call of CountUserActiveIPs.
-func (mr *MockStorageProviderMockRecorder) CountUserActiveIPs(ctx, ownerIss, ownerSub, aliasUUID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountUserActiveIPs", reflect.TypeOf((*MockStorageProvider)(nil).CountUserActiveIPs), ctx, ownerIss, ownerSub, aliasUUID)
 }
 
 // CreateCertificateRequest mocks base method.
@@ -174,20 +100,6 @@ func (m *MockStorageProvider) CreateUser(ctx context.Context, sub, iss, username
 func (mr *MockStorageProviderMockRecorder) CreateUser(ctx, sub, iss, username, displayName, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockStorageProvider)(nil).CreateUser), ctx, sub, iss, username, displayName, email)
-}
-
-// CreateWhitelistEvent mocks base method.
-func (m *MockStorageProvider) CreateWhitelistEvent(ctx context.Context, whitelistID int, actorIss, actorSub, eventType, notes string, clientIP, userAgent *string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateWhitelistEvent", ctx, whitelistID, actorIss, actorSub, eventType, notes, clientIP, userAgent)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateWhitelistEvent indicates an expected call of CreateWhitelistEvent.
-func (mr *MockStorageProviderMockRecorder) CreateWhitelistEvent(ctx, whitelistID, actorIss, actorSub, eventType, notes, clientIP, userAgent any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWhitelistEvent", reflect.TypeOf((*MockStorageProvider)(nil).CreateWhitelistEvent), ctx, whitelistID, actorIss, actorSub, eventType, notes, clientIP, userAgent)
 }
 
 // DeleteServiceAccount mocks base method.
@@ -244,36 +156,6 @@ func (m *MockStorageProvider) EnsureSystemUser(ctx context.Context, logger *slog
 func (mr *MockStorageProviderMockRecorder) EnsureSystemUser(ctx, logger any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureSystemUser", reflect.TypeOf((*MockStorageProvider)(nil).EnsureSystemUser), ctx, logger)
-}
-
-// ExpireOldIPs mocks base method.
-func (m *MockStorageProvider) ExpireOldIPs(ctx context.Context, systemUserIss, systemUserSub string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExpireOldIPs", ctx, systemUserIss, systemUserSub)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExpireOldIPs indicates an expected call of ExpireOldIPs.
-func (mr *MockStorageProviderMockRecorder) ExpireOldIPs(ctx, systemUserIss, systemUserSub any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireOldIPs", reflect.TypeOf((*MockStorageProvider)(nil).ExpireOldIPs), ctx, systemUserIss, systemUserSub)
-}
-
-// GetAllWhitelistEntries mocks base method.
-func (m *MockStorageProvider) GetAllWhitelistEntries(ctx context.Context) ([]*models.FirewallIPWhitelistEntry, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllWhitelistEntries", ctx)
-	ret0, _ := ret[0].([]*models.FirewallIPWhitelistEntry)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllWhitelistEntries indicates an expected call of GetAllWhitelistEntries.
-func (mr *MockStorageProviderMockRecorder) GetAllWhitelistEntries(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllWhitelistEntries", reflect.TypeOf((*MockStorageProvider)(nil).GetAllWhitelistEntries), ctx)
 }
 
 // GetApprovedCertificateRequests mocks base method.
@@ -381,21 +263,6 @@ func (mr *MockStorageProviderMockRecorder) GetPendingCertificateRequests(ctx any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPendingCertificateRequests", reflect.TypeOf((*MockStorageProvider)(nil).GetPendingCertificateRequests), ctx)
 }
 
-// GetPendingIPs mocks base method.
-func (m *MockStorageProvider) GetPendingIPs(ctx context.Context, aliasUUID string) ([]*models.FirewallIPWhitelistEntry, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPendingIPs", ctx, aliasUUID)
-	ret0, _ := ret[0].([]*models.FirewallIPWhitelistEntry)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPendingIPs indicates an expected call of GetPendingIPs.
-func (mr *MockStorageProviderMockRecorder) GetPendingIPs(ctx, aliasUUID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPendingIPs", reflect.TypeOf((*MockStorageProvider)(nil).GetPendingIPs), ctx, aliasUUID)
-}
-
 // GetPool mocks base method.
 func (m *MockStorageProvider) GetPool() *pgxpool.Pool {
 	m.ctrl.T.Helper()
@@ -501,51 +368,6 @@ func (mr *MockStorageProviderMockRecorder) GetUserByID(ctx, iss, sub any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockStorageProvider)(nil).GetUserByID), ctx, iss, sub)
 }
 
-// GetUserWhitelistEntries mocks base method.
-func (m *MockStorageProvider) GetUserWhitelistEntries(ctx context.Context, ownerIss, ownerSub string) ([]*models.FirewallIPWhitelistEntry, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserWhitelistEntries", ctx, ownerIss, ownerSub)
-	ret0, _ := ret[0].([]*models.FirewallIPWhitelistEntry)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserWhitelistEntries indicates an expected call of GetUserWhitelistEntries.
-func (mr *MockStorageProviderMockRecorder) GetUserWhitelistEntries(ctx, ownerIss, ownerSub any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserWhitelistEntries", reflect.TypeOf((*MockStorageProvider)(nil).GetUserWhitelistEntries), ctx, ownerIss, ownerSub)
-}
-
-// GetWhitelistEntryByID mocks base method.
-func (m *MockStorageProvider) GetWhitelistEntryByID(ctx context.Context, id int) (*models.FirewallIPWhitelistEntry, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetWhitelistEntryByID", ctx, id)
-	ret0, _ := ret[0].(*models.FirewallIPWhitelistEntry)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetWhitelistEntryByID indicates an expected call of GetWhitelistEntryByID.
-func (mr *MockStorageProviderMockRecorder) GetWhitelistEntryByID(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWhitelistEntryByID", reflect.TypeOf((*MockStorageProvider)(nil).GetWhitelistEntryByID), ctx, id)
-}
-
-// GetWhitelistEventsByEntry mocks base method.
-func (m *MockStorageProvider) GetWhitelistEventsByEntry(ctx context.Context, whitelistID int) ([]*models.FirewallIPWhitelistEvent, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetWhitelistEventsByEntry", ctx, whitelistID)
-	ret0, _ := ret[0].([]*models.FirewallIPWhitelistEvent)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetWhitelistEventsByEntry indicates an expected call of GetWhitelistEventsByEntry.
-func (mr *MockStorageProviderMockRecorder) GetWhitelistEventsByEntry(ctx, whitelistID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWhitelistEventsByEntry", reflect.TypeOf((*MockStorageProvider)(nil).GetWhitelistEventsByEntry), ctx, whitelistID)
-}
-
 // InsertAuditLogCertificateDownload mocks base method.
 func (m *MockStorageProvider) InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string, userAgent uasurfer.UserAgent) (*models.CertificateDownload, error) {
 	m.ctrl.T.Helper()
@@ -559,35 +381,6 @@ func (m *MockStorageProvider) InsertAuditLogCertificateDownload(ctx context.Cont
 func (mr *MockStorageProviderMockRecorder) InsertAuditLogCertificateDownload(ctx, certId, sub, iss, ipAddress, rawUserAgent, userAgent any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuditLogCertificateDownload", reflect.TypeOf((*MockStorageProvider)(nil).InsertAuditLogCertificateDownload), ctx, certId, sub, iss, ipAddress, rawUserAgent, userAgent)
-}
-
-// IsIPBlacklisted mocks base method.
-func (m *MockStorageProvider) IsIPBlacklisted(ctx context.Context, aliasName, ipAddress string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsIPBlacklisted", ctx, aliasName, ipAddress)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// IsIPBlacklisted indicates an expected call of IsIPBlacklisted.
-func (mr *MockStorageProviderMockRecorder) IsIPBlacklisted(ctx, aliasName, ipAddress any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsIPBlacklisted", reflect.TypeOf((*MockStorageProvider)(nil).IsIPBlacklisted), ctx, aliasName, ipAddress)
-}
-
-// MarkIPsAsAdded mocks base method.
-func (m *MockStorageProvider) MarkIPsAsAdded(ctx context.Context, ids []int, systemUserIss, systemUserSub string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MarkIPsAsAdded", ctx, ids, systemUserIss, systemUserSub)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// MarkIPsAsAdded indicates an expected call of MarkIPsAsAdded.
-func (mr *MockStorageProviderMockRecorder) MarkIPsAsAdded(ctx, ids, systemUserIss, systemUserSub any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkIPsAsAdded", reflect.TypeOf((*MockStorageProvider)(nil).MarkIPsAsAdded), ctx, ids, systemUserIss, systemUserSub)
 }
 
 // PauseServiceAccount mocks base method.
@@ -616,20 +409,6 @@ func (m *MockStorageProvider) Ping(ctx context.Context) error {
 func (mr *MockStorageProviderMockRecorder) Ping(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStorageProvider)(nil).Ping), ctx)
-}
-
-// RemoveIPFromWhitelist mocks base method.
-func (m *MockStorageProvider) RemoveIPFromWhitelist(ctx context.Context, id int, ownerIss, ownerSub string, clientIP, userAgent *string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveIPFromWhitelist", ctx, id, ownerIss, ownerSub, clientIP, userAgent)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveIPFromWhitelist indicates an expected call of RemoveIPFromWhitelist.
-func (mr *MockStorageProviderMockRecorder) RemoveIPFromWhitelist(ctx, id, ownerIss, ownerSub, clientIP, userAgent any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveIPFromWhitelist", reflect.TypeOf((*MockStorageProvider)(nil).RemoveIPFromWhitelist), ctx, id, ownerIss, ownerSub, clientIP, userAgent)
 }
 
 // RunMigrations mocks base method.
