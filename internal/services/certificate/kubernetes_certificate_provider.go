@@ -38,22 +38,17 @@ type KubernetesCertificateProvider struct {
 
 // NewKubernetesClient creates a new Kubernetes client based on the configuration
 func NewKubernetesClient(ctx context.Context, cfg *config.Config, logger *slog.Logger) (*KubernetesCertificateProvider, error) {
-	if cfg.Features == nil || !cfg.Features.MTLSManagement.Enabled {
-		return nil, fmt.Errorf("mtls_management is not enabled")
+	if !cfg.MTLS.Enabled {
+		return nil, fmt.Errorf("mtls is not enabled")
 	}
 
-	if cfg.Features == nil {
-		return nil, fmt.Errorf("features configuration is nil")
-
-	}
-
-	if cfg.Features.MTLSManagement.Kubernetes == nil {
+	if cfg.MTLS.Kubernetes == nil {
 		return nil, fmt.Errorf("kubernetes configuration is nil")
 	}
 
-	k8sCfg := cfg.Features.MTLSManagement.Kubernetes
-	issuerCfg := cfg.Features.MTLSManagement.Kubernetes.Issuer
-	subjectCfg := cfg.Features.MTLSManagement.CertificateSubject
+	k8sCfg := cfg.MTLS.Kubernetes
+	issuerCfg := cfg.MTLS.Kubernetes.Issuer
+	subjectCfg := cfg.MTLS.CertificateSubject
 
 	if issuerCfg == nil {
 		return nil, fmt.Errorf("certificate issuer configuration is missing")

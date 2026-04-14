@@ -108,10 +108,7 @@ func applyEnvironmentOverrides(config *Config) {
 	}
 
 	if hmacKey := os.Getenv(EnvMTLSDownloadTokenHMACKey); hmacKey != "" {
-		if config.Features == nil {
-			config.Features = &FeaturesConfig{}
-		}
-		config.Features.MTLSManagement.DownloadTokenHMACKey = hmacKey
+		config.MTLS.DownloadTokenHMACKey = hmacKey
 	}
 
 	if host := os.Getenv(EnvStorageHost); host != "" {
@@ -201,7 +198,7 @@ func validateConfig(config *Config) error {
 		return err
 	}
 
-	err = config.ValidateFeaturesConfig()
+	err = config.validateMTLSConfig()
 	if err != nil {
 		return err
 	}
@@ -361,9 +358,8 @@ func (c *Config) validateRedisConfig() error {
 	}
 
 	// Apply default indices if not set
-	if c.Redis.SessionIndex == 0 && c.Redis.CacheIndex == 0 && c.Redis.LeaderIndex == 0 {
+	if c.Redis.SessionIndex == 0 && c.Redis.LeaderIndex == 0 {
 		c.Redis.SessionIndex = DefaultRedisConfig.SessionIndex
-		c.Redis.CacheIndex = DefaultRedisConfig.CacheIndex
 		c.Redis.LeaderIndex = DefaultRedisConfig.LeaderIndex
 	}
 
@@ -371,20 +367,8 @@ func (c *Config) validateRedisConfig() error {
 		return fmt.Errorf("redis session_index must be non-negative, got %d", c.Redis.SessionIndex)
 	}
 
-	if c.Redis.CacheIndex < 0 {
-		return fmt.Errorf("redis cache_index must be non-negative, got %d", c.Redis.CacheIndex)
-	}
-
 	if c.Redis.LeaderIndex < 0 {
-		return fmt.Errorf("redis leader_index must be non-negative, got %d", c.Redis.CacheIndex)
-	}
-
-	if c.Redis.SessionIndex == c.Redis.CacheIndex {
-		return fmt.Errorf("redis session_index and cache_index should be different to avoid data collision (both are %d)", c.Redis.SessionIndex)
-	}
-
-	if c.Redis.LeaderIndex == c.Redis.CacheIndex {
-		return fmt.Errorf("redis leader_index and cache_index should be different to avoid data collision (both are %d)", c.Redis.LeaderIndex)
+		return fmt.Errorf("redis leader_index must be non-negative, got %d", c.Redis.LeaderIndex)
 	}
 
 	if c.Redis.LeaderIndex == c.Redis.SessionIndex {
@@ -394,10 +378,6 @@ func (c *Config) validateRedisConfig() error {
 	const maxRedisDB = 15
 	if c.Redis.SessionIndex > maxRedisDB {
 		return fmt.Errorf("redis session_index %d exceeds typical maximum of %d", c.Redis.SessionIndex, maxRedisDB)
-	}
-
-	if c.Redis.CacheIndex > maxRedisDB {
-		return fmt.Errorf("redis cache_index %d exceeds typical maximum of %d", c.Redis.CacheIndex, maxRedisDB)
 	}
 
 	if c.Redis.LeaderIndex > maxRedisDB {
@@ -435,12 +415,12 @@ func (c *Config) validateDistributedConfig() error {
 }
 
 func (c *Config) validateStorageConfig() error {
-	if c.Storage == nil || !c.Storage.Enabled {
+	if c.Storage == nil {
 		return nil
 	}
 
 	if c.Storage.Host == "" {
-		return fmt.Errorf("storage.host is required when storage is enabled")
+		return fmt.Errorf("storage.host is required")
 	}
 
 	if c.Storage.Port <= 0 || c.Storage.Port > 65535 {
@@ -448,116 +428,88 @@ func (c *Config) validateStorageConfig() error {
 	}
 
 	if c.Storage.Database == "" {
-		return fmt.Errorf("storage.database is required when storage is enabled")
+		return fmt.Errorf("storage.database is required")
 	}
 
 	return nil
 }
 
-func (c *Config) ValidateFeaturesConfig() error {
-	// Initialize Features with defaults if not set
-	if c.Features == nil {
-		defaultConfig := DefaultFeaturesConfig
-		c.Features = &defaultConfig
+func (c *Config) validateMTLSConfig() error {
+	if !c.MTLS.Enabled {
+		return nil
 	}
 
-	if c.Features.MTLSManagement.Enabled {
-		if err := c.ValidateMTLSManagementConfig(); err != nil {
-			return err
-		}
+	if c.Storage == nil {
+		return fmt.Errorf("storage is required when mtls is enabled")
 	}
 
-	return nil
+	if c.MTLS.DownloadTokenHMACKey == "" {
+		return fmt.Errorf("mtls.download_token_hmac_key is required when mtls is enabled")
+	}
+
+	if len(c.MTLS.DownloadTokenHMACKey) <= 32 {
+		return fmt.Errorf("mtls.download_token_hmac_key must be at least 32 characters")
+	}
+
+	if c.MTLS.MinCertificateValidityDays == 0 {
+		c.MTLS.MinCertificateValidityDays = DefaultMTLSIssuerConfig.MinCertificateValidityDays
+	}
+
+	if c.MTLS.MaxCertificateValidityDays == 0 {
+		c.MTLS.MaxCertificateValidityDays = DefaultMTLSIssuerConfig.MaxCertificateValidityDays
+	}
+
+	if c.MTLS.MaxCertificateValidityDays < c.MTLS.MinCertificateValidityDays {
+		return fmt.Errorf("mtls.max_certificate_validity_days cannot be less than min_certificate_validity_days")
+	}
+
+	if c.MTLS.Kubernetes == nil {
+		c.MTLS.Kubernetes = DefaultMTLSManagementKubernetesConfig
+	}
+
+	if c.MTLS.CertificateSubject == nil {
+		c.MTLS.CertificateSubject = DefaultCertificateSubject
+	}
+
+	if c.MTLS.CertificateSubject.Organization == "" {
+		c.MTLS.CertificateSubject.Organization = DefaultCertificateSubject.Organization
+	}
+
+	if c.MTLS.BackgroundJobConfig == nil {
+		c.MTLS.BackgroundJobConfig = DefaultMTLSBackgroundJobConfig
+	}
+
+	if c.MTLS.BackgroundJobConfig.ApprovedCertificatePollingInterval == 0 {
+		c.MTLS.BackgroundJobConfig.ApprovedCertificatePollingInterval = DefaultMTLSBackgroundJobConfig.ApprovedCertificatePollingInterval
+	}
+
+	if c.MTLS.BackgroundJobConfig.IssuedCertificatePollingInterval == 0 {
+		c.MTLS.BackgroundJobConfig.IssuedCertificatePollingInterval = DefaultMTLSBackgroundJobConfig.IssuedCertificatePollingInterval
+	}
+
+	return c.validateMTLSKubernetesConfig()
 }
 
-func (c *Config) ValidateMTLSManagementConfig() error {
-	if c.Features == nil || !c.Features.MTLSManagement.Enabled {
+func (c *Config) validateMTLSKubernetesConfig() error {
+	if c.MTLS.Kubernetes == nil || !c.MTLS.Kubernetes.Enabled {
 		return nil
 	}
 
-	// mTLS management requires storage to be enabled
-	if c.Storage == nil || !c.Storage.Enabled {
-		return fmt.Errorf("storage must be enabled when mtls_management is enabled")
+	if c.MTLS.Kubernetes.Issuer == nil {
+		return fmt.Errorf("mtls.kubernetes.issuer is required when mtls.kubernetes is enabled")
 	}
 
-	if c.Features.MTLSManagement.DownloadTokenHMACKey == "" {
-		return fmt.Errorf("features.mtls_management.download_token_hmac_key is required when mtls_management is enabled")
+	if c.MTLS.Kubernetes.Issuer.Name == "" {
+		return fmt.Errorf("mtls.kubernetes.issuer.name is required when mtls.kubernetes is enabled")
 	}
 
-	if len(c.Features.MTLSManagement.DownloadTokenHMACKey) <= 32 {
-		return fmt.Errorf("features.mtls_management.download_token_hmac_key must be at least 32 characters")
+	if c.MTLS.Kubernetes.Issuer.Kind == "" {
+		return fmt.Errorf("mtls.kubernetes.issuer.kind is required when mtls.kubernetes is enabled")
 	}
 
-	// Apply default validity days if not set
-	if c.Features.MTLSManagement.MinCertificateValidityDays == 0 {
-		c.Features.MTLSManagement.MinCertificateValidityDays = DefaultMTLSIssuerConfig.MinCertificateValidityDays
-	}
-
-	if c.Features.MTLSManagement.MaxCertificateValidityDays == 0 {
-		c.Features.MTLSManagement.MaxCertificateValidityDays = DefaultMTLSIssuerConfig.MaxCertificateValidityDays
-	}
-
-	if c.Features.MTLSManagement.MaxCertificateValidityDays < c.Features.MTLSManagement.MinCertificateValidityDays {
-		return fmt.Errorf("features.mtls_management.max_certificate_validity_days cannot be less than min_certificate_validity_days")
-	}
-
-	if c.Features.MTLSManagement.Kubernetes == nil {
-		c.Features.MTLSManagement.Kubernetes = DefaultMTLSManagementKubernetesConfig
-	}
-
-	if c.Features.MTLSManagement.CertificateSubject == nil {
-		c.Features.MTLSManagement.CertificateSubject = DefaultCertificateSubject
-	}
-
-	if c.Features.MTLSManagement.CertificateSubject.Organization == "" {
-		c.Features.MTLSManagement.CertificateSubject.Organization = DefaultCertificateSubject.Organization
-	}
-
-	// Apply default background job config if not set
-	if c.Features.MTLSManagement.BackgroundJobConfig == nil {
-		c.Features.MTLSManagement.BackgroundJobConfig = DefaultMTLSBackgroundJobConfig
-	}
-
-	if c.Features.MTLSManagement.BackgroundJobConfig.ApprovedCertificatePollingInterval == 0 {
-		c.Features.MTLSManagement.BackgroundJobConfig.ApprovedCertificatePollingInterval = DefaultMTLSBackgroundJobConfig.ApprovedCertificatePollingInterval
-	}
-
-	if c.Features.MTLSManagement.BackgroundJobConfig.IssuedCertificatePollingInterval == 0 {
-		c.Features.MTLSManagement.BackgroundJobConfig.IssuedCertificatePollingInterval = DefaultMTLSBackgroundJobConfig.IssuedCertificatePollingInterval
-	}
-
-	err := c.ValidateMTLSManagementKubernetesConfig()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Config) ValidateMTLSManagementKubernetesConfig() error {
-	if c.Features.MTLSManagement.Kubernetes == nil {
-		return nil
-	}
-
-	if !c.Features.MTLSManagement.Kubernetes.Enabled {
-		return nil
-	}
-
-	if c.Features.MTLSManagement.Kubernetes.Issuer == nil {
-		return fmt.Errorf("features.mtls_management.kubernetes.issuer is required when features.mtls_management.kubernetes is enabled")
-	}
-
-	if c.Features.MTLSManagement.Kubernetes.Issuer.Name == "" {
-		return fmt.Errorf("features.mtls_management.kubernetes.issuer.name is required when features.mtls_management.kubernetes is enabled")
-	}
-
-	if c.Features.MTLSManagement.Kubernetes.Issuer.Kind == "" {
-		return fmt.Errorf("features.mtls_management.kubernetes.issuer.kind is required when features.mtls_management.kubernetes is enabled")
-	}
-
-	kind := c.Features.MTLSManagement.Kubernetes.Issuer.Kind
+	kind := c.MTLS.Kubernetes.Issuer.Kind
 	if kind != "Issuer" && kind != "ClusterIssuer" {
-		return fmt.Errorf("features.mtls_management.certificate_issuer.kind must be either 'Issuer' or 'ClusterIssuer', got '%s'", kind)
+		return fmt.Errorf("mtls.kubernetes.issuer.kind must be either 'Issuer' or 'ClusterIssuer', got '%s'", kind)
 	}
 
 	return nil

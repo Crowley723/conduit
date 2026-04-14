@@ -58,7 +58,7 @@ func setupRouter(ctx *middlewares.AppContext) *chi.Mux {
 			r.Post("/logout", ctx.HandlerFunc(handlers.POSTLogoutHandler))
 		})
 
-		if ctx.Config.Storage.Enabled {
+		if ctx.Config.Storage != nil {
 			r.Route("/service-accounts", func(r chi.Router) {
 				r.Group(func(r chi.Router) {
 					r.Use(middlewares.RequireCookieAuth)
@@ -76,7 +76,7 @@ func setupRouter(ctx *middlewares.AppContext) *chi.Mux {
 			})
 		}
 
-		if ctx.Config.Storage.Enabled && ctx.Config.Features.MTLSManagement.Enabled {
+		if ctx.Config.Storage != nil && ctx.Config.MTLS.Enabled {
 			r.Route("/certificates", func(r chi.Router) {
 				r.Group(func(r chi.Router) {
 					r.Use(middlewares.RequireAuth)

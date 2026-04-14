@@ -29,5 +29,6 @@ func GetAllValidScopes() []string {
 		ScopeMTLSReadAllCerts,
 		ScopeMTLSAutoApproveCert,
 		ScopeMTLSSelfApproveCerts,
+		ScopeMTLSAutoApproveCert,
 	}
 }

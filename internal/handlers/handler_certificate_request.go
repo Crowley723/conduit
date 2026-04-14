@@ -62,8 +62,8 @@ func POSTCertificateRequest(ctx *middlewares.AppContext) {
 		req.ValidityDays = 90
 	}
 
-	if req.ValidityDays < ctx.Config.Features.MTLSManagement.MinCertificateValidityDays || req.ValidityDays > ctx.Config.Features.MTLSManagement.MaxCertificateValidityDays {
-		ctx.SetJSONError(http.StatusBadRequest, fmt.Sprintf("validity_days must be between %d and %d days", ctx.Config.Features.MTLSManagement.MinCertificateValidityDays, ctx.Config.Features.MTLSManagement.MaxCertificateValidityDays))
+	if req.ValidityDays < ctx.Config.MTLS.MinCertificateValidityDays || req.ValidityDays > ctx.Config.MTLS.MaxCertificateValidityDays {
+		ctx.SetJSONError(http.StatusBadRequest, fmt.Sprintf("validity_days must be between %d and %d days", ctx.Config.MTLS.MinCertificateValidityDays, ctx.Config.MTLS.MaxCertificateValidityDays))
 		return
 	}
 

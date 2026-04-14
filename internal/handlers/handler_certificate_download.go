@@ -19,7 +19,6 @@ import (
 	"github.com/Crowley723/conduit/internal/middlewares"
 	"github.com/Crowley723/conduit/internal/models"
 	"github.com/Crowley723/conduit/internal/storage"
-	"github.com/avct/uasurfer"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"software.sslmate.com/src/go-pkcs12"
@@ -94,7 +93,7 @@ func POSTCertificateUnlock(ctx *middlewares.AppContext) {
 	}
 
 	tokenUUID := uuid.New().String()
-	tokenHash := hashToken(tokenUUID, []byte(ctx.Config.Features.MTLSManagement.DownloadTokenHMACKey))
+	tokenHash := hashToken(tokenUUID, []byte(ctx.Config.MTLS.DownloadTokenHMACKey))
 
 	if err := ctx.Storage.CreateDownloadToken(ctx, tokenHash, request.ID, principal.GetIss(), principal.GetSub(), reqBody.Passphrase, time.Now().Add(downloadTokenLifetime)); err != nil {
 		ctx.Logger.Error("unable to store download token", "error", err)
@@ -136,7 +135,7 @@ func GETCertificateDownload(ctx *middlewares.AppContext) {
 		return
 	}
 
-	tokenHash := hashToken(downloadTokenParam, []byte(ctx.Config.Features.MTLSManagement.DownloadTokenHMACKey))
+	tokenHash := hashToken(downloadTokenParam, []byte(ctx.Config.MTLS.DownloadTokenHMACKey))
 
 	downloadToken, err := ctx.Storage.GetAndConsumeDownloadToken(ctx, tokenHash)
 	if err != nil {
@@ -203,7 +202,7 @@ func GETCertificateDownload(ctx *middlewares.AppContext) {
 		return
 	}
 
-	_, err = ctx.Storage.InsertAuditLogCertificateDownload(ctx, certificateId, principal.GetSub(), principal.GetIss(), host, ctx.Request.UserAgent(), *uasurfer.Parse(ctx.Request.UserAgent()))
+	_, err = ctx.Storage.InsertAuditLogCertificateDownload(ctx, certificateId, principal.GetSub(), principal.GetIss(), host, ctx.Request.UserAgent())
 	if err != nil {
 		ctx.Logger.Error("failed to insert download audit log", "error", err)
 		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))

@@ -12,10 +12,5 @@ type CertificateDownload struct {
 	Iss                  string
 	IPAddress            netip.Addr
 	UserAgent            string
-	BrowserName          string
-	BrowserVersion       string
-	OSName               string
-	OSVersion            string
-	DeviceType           string
 	DownloadedAt         time.Time
 }

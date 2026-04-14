@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/Crowley723/conduit/internal/authorization"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/authorization"
 )
 
 type Config struct {
@@ -15,7 +16,7 @@ type Config struct {
 	Redis         *RedisConfig        `yaml:"redis"`
 	Distributed   *DistributedConfig  `yaml:"distributed"`
 	Storage       *StorageConfig      `yaml:"storage"`
-	Features      *FeaturesConfig     `yaml:"features"`
+	MTLS          MTLSManagement      `yaml:"mtls"`
 }
 
 type ServerConfig struct {
@@ -106,14 +107,12 @@ type RedisConfig struct {
 	Password     string               `yaml:"password"`
 	Sentinel     *RedisSentinelConfig `yaml:"sentinel"`
 	SessionIndex int                  `yaml:"session_index"`
-	CacheIndex   int                  `yaml:"cache_index"`
 	LeaderIndex  int                  `yaml:"leader_index"`
 }
 
 var DefaultRedisConfig = RedisConfig{
 	SessionIndex: 0,
-	CacheIndex:   1,
-	LeaderIndex:  2,
+	LeaderIndex:  1,
 }
 
 type RedisSentinelConfig struct {
@@ -134,24 +133,11 @@ var DefaultDistributedConfig = DistributedConfig{
 }
 
 type StorageConfig struct {
-	Enabled  bool   `yaml:"enabled"`
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
-}
-
-var DefaultStorageConfig = StorageConfig{
-	Enabled: false,
-}
-
-type FeaturesConfig struct {
-	MTLSManagement MTLSManagement `yaml:"mtls_management,omitempty"`
-}
-
-var DefaultFeaturesConfig = FeaturesConfig{
-	MTLSManagement: DefaultMTLSIssuerConfig,
 }
 
 type MTLSManagement struct {
@@ -194,7 +180,7 @@ type CertificateSubject struct {
 }
 
 var DefaultCertificateSubject = &CertificateSubject{
-	Organization: "Homelab Conduit",
+	Organization: "Conduit",
 	Country:      "",
 	Locality:     "",
 	Province:     "",

@@ -38,7 +38,7 @@ func GETAuthStatusHandler(ctx *middlewares.AppContext) {
 
 	config := &ConfigResponse{}
 
-	if ctx.Config.Features != nil && ctx.Config.Features.MTLSManagement.Enabled {
+	if ctx.Config.MTLS.Enabled {
 		config.MTLS = MTLSConfigResponse{
 			Enabled: true,
 		}

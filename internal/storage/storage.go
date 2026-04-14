@@ -7,7 +7,6 @@ import (
 
 	"github.com/Crowley723/conduit/internal/models"
 
-	"github.com/avct/uasurfer"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -60,7 +59,7 @@ type Provider interface {
 
 	/* Audit Log Queries */
 
-	InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string, userAgent uasurfer.UserAgent) (*models.CertificateDownload, error)
+	InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string) (*models.CertificateDownload, error)
 	GetCertificateDownloadAuditLogByID(ctx context.Context, id int) (*models.CertificateDownload, error)
 	GetRecentCertificateDownloadLogs(ctx context.Context, limit int) ([]models.CertificateDownload, error)
 }

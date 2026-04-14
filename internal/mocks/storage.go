@@ -16,7 +16,6 @@ import (
 	time "time"
 
 	models "github.com/Crowley723/conduit/internal/models"
-	uasurfer "github.com/avct/uasurfer"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -413,18 +412,18 @@ func (mr *MockStorageProviderMockRecorder) GetUserByID(ctx, iss, sub any) *gomoc
 }
 
 // InsertAuditLogCertificateDownload mocks base method.
-func (m *MockStorageProvider) InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string, userAgent uasurfer.UserAgent) (*models.CertificateDownload, error) {
+func (m *MockStorageProvider) InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string) (*models.CertificateDownload, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertAuditLogCertificateDownload", ctx, certId, sub, iss, ipAddress, rawUserAgent, userAgent)
+	ret := m.ctrl.Call(m, "InsertAuditLogCertificateDownload", ctx, certId, sub, iss, ipAddress, rawUserAgent)
 	ret0, _ := ret[0].(*models.CertificateDownload)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // InsertAuditLogCertificateDownload indicates an expected call of InsertAuditLogCertificateDownload.
-func (mr *MockStorageProviderMockRecorder) InsertAuditLogCertificateDownload(ctx, certId, sub, iss, ipAddress, rawUserAgent, userAgent any) *gomock.Call {
+func (mr *MockStorageProviderMockRecorder) InsertAuditLogCertificateDownload(ctx, certId, sub, iss, ipAddress, rawUserAgent any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuditLogCertificateDownload", reflect.TypeOf((*MockStorageProvider)(nil).InsertAuditLogCertificateDownload), ctx, certId, sub, iss, ipAddress, rawUserAgent, userAgent)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuditLogCertificateDownload", reflect.TypeOf((*MockStorageProvider)(nil).InsertAuditLogCertificateDownload), ctx, certId, sub, iss, ipAddress, rawUserAgent)
 }
 
 // PauseServiceAccount mocks base method.

@@ -90,7 +90,7 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	var database storage.Provider
-	if cfg.Storage.Enabled == true {
+	if cfg.Storage != nil {
 		dbProvider, err := storage.NewStorageProvider(ctx, cfg)
 		if err != nil {
 			logger.Error("failed to initialize database provider", "error", err)
@@ -115,8 +115,8 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	var certProvider certificate.Provider
-	if cfg.Features.MTLSManagement.Enabled {
-		if cfg.Features.MTLSManagement.Kubernetes != nil && cfg.Features.MTLSManagement.Kubernetes.Enabled {
+	if cfg.MTLS.Enabled {
+		if cfg.MTLS.Kubernetes != nil && cfg.MTLS.Kubernetes.Enabled {
 			certProvider, err = certificate.NewKubernetesClient(ctx, cfg, logger)
 			if err != nil {
 				logger.Error("failed to initialize kubernetes client", "error", err)
@@ -132,11 +132,11 @@ func New(cfg *config.Config) (*Server, error) {
 
 	jobManager := jobs.NewJobManager(election, logger)
 
-	if cfg.Features.MTLSManagement.Enabled {
-		certificateCreationJob := jobs.NewCertificateCreationJob(appCtx, cfg.Features.MTLSManagement.BackgroundJobConfig.ApprovedCertificatePollingInterval)
+	if cfg.MTLS.Enabled {
+		certificateCreationJob := jobs.NewCertificateCreationJob(appCtx, cfg.MTLS.BackgroundJobConfig.ApprovedCertificatePollingInterval)
 		jobManager.Register(certificateCreationJob)
 
-		certificateIssuedJob := jobs.NewCertificateIssuedStatusJob(appCtx, cfg.Features.MTLSManagement.BackgroundJobConfig.IssuedCertificatePollingInterval)
+		certificateIssuedJob := jobs.NewCertificateIssuedStatusJob(appCtx, cfg.MTLS.BackgroundJobConfig.IssuedCertificatePollingInterval)
 		jobManager.Register(certificateIssuedJob)
 	}
 

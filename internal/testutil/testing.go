@@ -38,10 +38,8 @@ type TestContext struct {
 
 func NewTestContext(t *testing.T) *TestContext {
 	cfg := &config.Config{
-		Features: &config.FeaturesConfig{
-			MTLSManagement: config.MTLSManagement{
-				Enabled: false,
-			},
+		MTLS: config.MTLSManagement{
+			Enabled: false,
 		},
 	}
 
@@ -81,10 +79,8 @@ func NewTestContext(t *testing.T) *TestContext {
 // NewTestContextWithURL creates a complete test setup with sensible defaults
 func NewTestContextWithURL(t *testing.T, method, url string) *TestContext {
 	cfg := &config.Config{
-		Features: &config.FeaturesConfig{
-			MTLSManagement: config.MTLSManagement{
-				Enabled: false,
-			},
+		MTLS: config.MTLSManagement{
+			Enabled: false,
 		},
 	}
 

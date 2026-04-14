@@ -34,7 +34,7 @@ func OptionalAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		if appCtx.Config.Storage.Enabled {
+		if appCtx.Config.Storage != nil {
 			if authToken, err := utils.ExtractAuthorizationHeader(r); err == nil {
 				if serviceAccount, err := VerifyServiceAccount(appCtx, authToken); err == nil && serviceAccount != nil {
 					appCtx.SetPrincipal(serviceAccount)
@@ -64,7 +64,7 @@ func RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		if appCtx.Config.Storage.Enabled {
+		if appCtx.Config.Storage != nil {
 			if authToken, err := utils.ExtractAuthorizationHeader(r); err == nil {
 				if serviceAccount, err := VerifyServiceAccount(appCtx, authToken); err == nil && serviceAccount != nil {
 					appCtx.SetPrincipal(serviceAccount)

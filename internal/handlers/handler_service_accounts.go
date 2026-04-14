@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/Crowley723/conduit/internal/middlewares"
-	"github.com/Crowley723/conduit/internal/models"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -319,9 +320,8 @@ func GETUserScopes(ctx *middlewares.AppContext) {
 		scopes = []string{}
 	}
 
-	// Convert scopes to ScopeInfo objects with disabled status
 	scopeInfos := make([]ScopeInfo, 0, len(scopes))
-	firewallDisabledReason := "Firewall management doesn't currently support service accounts"
+	//firewallDisabledReason := "Firewall management doesn't currently support service accounts"
 
 	for _, scope := range scopes {
 		scopeInfo := ScopeInfo{
@@ -329,11 +329,10 @@ func GETUserScopes(ctx *middlewares.AppContext) {
 			Disabled: false,
 		}
 
-		// Disable firewall scopes (all scopes starting with "firewall:")
-		if len(scope) >= 9 && scope[:9] == "firewall:" {
-			scopeInfo.Disabled = true
-			scopeInfo.Reason = &firewallDisabledReason
-		}
+		//if len(scope) >= 9 && scope[:9] == "firewall:" {
+		//	scopeInfo.Disabled = true
+		//	scopeInfo.Reason = &firewallDisabledReason
+		//}
 
 		scopeInfos = append(scopeInfos, scopeInfo)
 	}
