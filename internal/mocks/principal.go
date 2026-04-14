@@ -10,9 +10,9 @@
 package mocks
 
 import (
-	config "github.com/Crowley723/conduit/internal/config"
 	reflect "reflect"
 
+	config "github.com/Crowley723/conduit/internal/config"
 	gomock "go.uber.org/mock/gomock"
 )
 

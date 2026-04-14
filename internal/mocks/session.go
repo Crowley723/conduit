@@ -10,12 +10,12 @@
 package mocks
 
 import (
-	middlewares "github.com/Crowley723/conduit/internal/middlewares"
-	models "github.com/Crowley723/conduit/internal/models"
 	http "net/http"
 	reflect "reflect"
 	time "time"
 
+	middlewares "github.com/Crowley723/conduit/internal/middlewares"
+	models "github.com/Crowley723/conduit/internal/models"
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	gomock "go.uber.org/mock/gomock"
 )

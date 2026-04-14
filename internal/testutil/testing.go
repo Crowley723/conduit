@@ -3,17 +3,16 @@ package testutil
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/Crowley723/conduit/internal/config"
-	"github.com/Crowley723/conduit/internal/data"
-	"github.com/Crowley723/conduit/internal/middlewares"
-	"github.com/Crowley723/conduit/internal/mocks"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/mocks"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/common/model"
@@ -31,7 +30,6 @@ type TestContext struct {
 	Request             *http.Request
 	Response            *httptest.ResponseRecorder
 	MockController      *gomock.Controller
-	MockCache           *mocks.MockCacheProvider
 	MockSession         *mocks.MockSessionProvider
 	MockOidcProvider    *mocks.MockOIDCProvider
 	MockStorageProvider *mocks.MockStorageProvider
@@ -52,7 +50,6 @@ func NewTestContext(t *testing.T) *TestContext {
 
 	ctrl := gomock.NewController(t)
 
-	mockCache := mocks.NewMockCacheProvider(ctrl)
 	mockSession := mocks.NewMockSessionProvider(ctrl)
 	mockOIDCProvider := mocks.NewMockOIDCProvider(ctrl)
 	mockStorageProvider := mocks.NewMockStorageProvider(ctrl)
@@ -65,7 +62,6 @@ func NewTestContext(t *testing.T) *TestContext {
 		Logger:         logger,
 		SessionManager: mockSession,
 		OIDCProvider:   mockOIDCProvider,
-		Cache:          mockCache,
 		Storage:        mockStorageProvider,
 		Request:        nil,
 		Response:       rr,
@@ -76,7 +72,6 @@ func NewTestContext(t *testing.T) *TestContext {
 		Request:             nil,
 		Response:            rr,
 		MockController:      ctrl,
-		MockCache:           mockCache,
 		MockSession:         mockSession,
 		MockOidcProvider:    mockOIDCProvider,
 		MockStorageProvider: mockStorageProvider,
@@ -98,7 +93,6 @@ func NewTestContextWithURL(t *testing.T, method, url string) *TestContext {
 
 	ctrl := gomock.NewController(t)
 
-	mockCache := mocks.NewMockCacheProvider(ctrl)
 	mockSession := mocks.NewMockSessionProvider(ctrl)
 	mockOIDCProvider := mocks.NewMockOIDCProvider(ctrl)
 	mockStorageProvider := mocks.NewMockStorageProvider(ctrl)
@@ -112,19 +106,16 @@ func NewTestContextWithURL(t *testing.T, method, url string) *TestContext {
 		Logger:         logger,
 		SessionManager: mockSession,
 		OIDCProvider:   mockOIDCProvider,
-		Cache:          mockCache,
 		Storage:        mockStorageProvider,
 		Request:        req,
 		Response:       rr,
 	}
 
 	return &TestContext{
-		AppContext:          appCtx,
-		Request:             req,
-		Response:            rr,
-		MockController:      ctrl,
-		MockCache:           mockCache,
-		MockSession:         mockSession,
+		AppContext:     appCtx,
+		Request:        req,
+		Response:       rr,
+		MockController: ctrl, MockSession: mockSession,
 		MockOidcProvider:    mockOIDCProvider,
 		MockStorageProvider: mockStorageProvider,
 		LogHandler:          logHandler,
@@ -135,7 +126,6 @@ func NewTestContextWithURL(t *testing.T, method, url string) *TestContext {
 func NewTestContextWithRealCache(method, url string) *TestContext {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
 	cfg := &config.Config{}
-	cache := &data.MemCache{}
 
 	req := httptest.NewRequest(method, url, nil)
 	rr := httptest.NewRecorder()
@@ -147,7 +137,6 @@ func NewTestContextWithRealCache(method, url string) *TestContext {
 		SessionManager: nil,
 		OIDCProvider:   nil,
 		Storage:        nil,
-		Cache:          cache,
 		Request:        req,
 		Response:       rr,
 	}
@@ -367,12 +356,6 @@ func (tc *TestContext) WithLogger(logger *slog.Logger) *TestContext {
 	return tc
 }
 
-// WithCache allows you to override the cache with a different mock or implementation
-func (tc *TestContext) WithCache(cache data.Provider) *TestContext {
-	tc.AppContext.Cache = cache
-	return tc
-}
-
 // WithSessionManager allows you to override the session manager with a different mock or implementation
 func (tc *TestContext) WithSessionManager(sm middlewares.SessionProvider) *TestContext {
 	tc.AppContext.SessionManager = sm
@@ -435,16 +418,6 @@ func (tc *TestContext) WithRequest(req *http.Request) *TestContext {
 	return tc
 }
 
-// ExpectCacheGet sets up an expectation for cache.Get()
-func (tc *TestContext) ExpectCacheGet(ctx context.Context, queryName string, returnData data.CachedData, found bool) *gomock.Call {
-	return tc.MockCache.EXPECT().Get(ctx, queryName).Return(returnData, found)
-}
-
-// ExpectCacheSet sets up an expectation for cache.Set()
-func (tc *TestContext) ExpectCacheSet(ctx context.Context, queryName string, value any) *gomock.Call {
-	return tc.MockCache.EXPECT().Set(ctx, queryName, value)
-}
-
 // ExpectSessionIsAuthenticated sets up an expectation for session.IsAuthenticated()
 func (tc *TestContext) ExpectSessionIsAuthenticated(result bool) *gomock.Call {
 	return tc.MockSession.EXPECT().IsAuthenticated(tc.AppContext).Return(result)
@@ -455,75 +428,11 @@ func (tc *TestContext) ExpectSessionGetUser(user interface{}, ok bool) *gomock.C
 	return tc.MockSession.EXPECT().GetUser(tc.AppContext).Return(user, ok)
 }
 
-func (tc *TestContext) CreateCachedDataWithScalar(name string, value float64, requireAuth bool, requiredGroup string) data.CachedData {
-	scalar := &model.Scalar{
-		Value:     model.SampleValue(value),
-		Timestamp: model.Time(time.Now().Unix() * 1000),
-	}
-
-	jsonBytes, err := json.Marshal(scalar)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal scalar: %v", err))
-	}
-
-	return data.CachedData{
-		Name:          name,
-		Value:         scalar,
-		ValueType:     "scalar",
-		JSONBytes:     jsonBytes,
-		Timestamp:     time.Now(),
-		RequireAuth:   requireAuth,
-		RequiredGroup: requiredGroup,
-	}
-}
-
-// CreateCachedDataWithVector creates a CachedData instance with a Vector value
-func (tc *TestContext) CreateCachedDataWithVector(name string, samples []*model.Sample, requireAuth bool, requiredGroup string) data.CachedData {
-	vector := model.Vector(samples)
-	return data.CachedData{
-		Name:          name,
-		Value:         vector,
-		Timestamp:     time.Now(),
-		RequireAuth:   requireAuth,
-		RequiredGroup: requiredGroup,
-	}
-}
-
 // CreateSample creates a model.Sample for use in vectors
 func (tc *TestContext) CreateSample(labels model.LabelSet, value float64, timestamp time.Time) *model.Sample {
 	return &model.Sample{
 		Metric:    model.Metric(labels),
 		Value:     model.SampleValue(value),
 		Timestamp: model.Time(timestamp.Unix() * 1000),
-	}
-}
-
-type UnmarshalableValue struct {
-	Channel chan int
-}
-
-func (u UnmarshalableValue) Type() model.ValueType {
-	return model.ValScalar
-}
-
-func (u UnmarshalableValue) String() string {
-	return "unmarshalable"
-}
-
-func (u UnmarshalableValue) MarshalJSON() ([]byte, error) {
-	return nil, fmt.Errorf("intentionally unmarshalable value")
-}
-
-func (tc *TestContext) CreateCachedDataWithUnmarshalableValue(name string, requireAuth bool, requiredGroup string) data.CachedData {
-	unmarshalableValue := UnmarshalableValue{
-		Channel: make(chan int),
-	}
-
-	return data.CachedData{
-		Name:          name,
-		Value:         unmarshalableValue,
-		RequireAuth:   requireAuth,
-		RequiredGroup: requiredGroup,
-		Timestamp:     time.Now(),
 	}
 }

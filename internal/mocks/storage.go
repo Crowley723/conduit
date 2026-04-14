@@ -11,11 +11,11 @@ package mocks
 
 import (
 	context "context"
-	models "github.com/Crowley723/conduit/internal/models"
 	slog "log/slog"
 	reflect "reflect"
 	time "time"
 
+	models "github.com/Crowley723/conduit/internal/models"
 	uasurfer "github.com/avct/uasurfer"
 	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 	gomock "go.uber.org/mock/gomock"
