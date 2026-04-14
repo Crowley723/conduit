@@ -72,6 +72,20 @@ func (mr *MockStorageProviderMockRecorder) CreateCertificateRequest(ctx, sub, is
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCertificateRequest", reflect.TypeOf((*MockStorageProvider)(nil).CreateCertificateRequest), ctx, sub, iss, commonName, status, message, dnsNames, organizationalUnits, validityDays)
 }
 
+// CreateDownloadToken mocks base method.
+func (m *MockStorageProvider) CreateDownloadToken(ctx context.Context, tokenHash string, certificateID int, principalIss, principalSub, passphrase string, expiresAt time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDownloadToken", ctx, tokenHash, certificateID, principalIss, principalSub, passphrase, expiresAt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateDownloadToken indicates an expected call of CreateDownloadToken.
+func (mr *MockStorageProviderMockRecorder) CreateDownloadToken(ctx, tokenHash, certificateID, principalIss, principalSub, passphrase, expiresAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDownloadToken", reflect.TypeOf((*MockStorageProvider)(nil).CreateDownloadToken), ctx, tokenHash, certificateID, principalIss, principalSub, passphrase, expiresAt)
+}
+
 // CreateServiceAccount mocks base method.
 func (m *MockStorageProvider) CreateServiceAccount(ctx context.Context, serviceAccount *models.ServiceAccount) (*models.ServiceAccount, error) {
 	m.ctrl.T.Helper()
@@ -100,6 +114,21 @@ func (m *MockStorageProvider) CreateUser(ctx context.Context, sub, iss, username
 func (mr *MockStorageProviderMockRecorder) CreateUser(ctx, sub, iss, username, displayName, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockStorageProvider)(nil).CreateUser), ctx, sub, iss, username, displayName, email)
+}
+
+// DeleteExpiredDownloadTokens mocks base method.
+func (m *MockStorageProvider) DeleteExpiredDownloadTokens(ctx context.Context) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExpiredDownloadTokens", ctx)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteExpiredDownloadTokens indicates an expected call of DeleteExpiredDownloadTokens.
+func (mr *MockStorageProviderMockRecorder) DeleteExpiredDownloadTokens(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredDownloadTokens", reflect.TypeOf((*MockStorageProvider)(nil).DeleteExpiredDownloadTokens), ctx)
 }
 
 // DeleteServiceAccount mocks base method.
@@ -156,6 +185,21 @@ func (m *MockStorageProvider) EnsureSystemUser(ctx context.Context, logger *slog
 func (mr *MockStorageProviderMockRecorder) EnsureSystemUser(ctx, logger any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureSystemUser", reflect.TypeOf((*MockStorageProvider)(nil).EnsureSystemUser), ctx, logger)
+}
+
+// GetAndConsumeDownloadToken mocks base method.
+func (m *MockStorageProvider) GetAndConsumeDownloadToken(ctx context.Context, tokenHash string) (*models.DownloadToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAndConsumeDownloadToken", ctx, tokenHash)
+	ret0, _ := ret[0].(*models.DownloadToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAndConsumeDownloadToken indicates an expected call of GetAndConsumeDownloadToken.
+func (mr *MockStorageProviderMockRecorder) GetAndConsumeDownloadToken(ctx, tokenHash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAndConsumeDownloadToken", reflect.TypeOf((*MockStorageProvider)(nil).GetAndConsumeDownloadToken), ctx, tokenHash)
 }
 
 // GetApprovedCertificateRequests mocks base method.

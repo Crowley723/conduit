@@ -52,6 +52,12 @@ type Provider interface {
 	DisableServiceAccount(ctx context.Context, iss string, sub string) error
 	EnableServiceAccount(ctx context.Context, iss, sub string) error
 
+	/* Download Token Queries */
+
+	CreateDownloadToken(ctx context.Context, tokenHash string, certificateID int, principalIss, principalSub, passphrase string, expiresAt time.Time) error
+	GetAndConsumeDownloadToken(ctx context.Context, tokenHash string) (*models.DownloadToken, error)
+	DeleteExpiredDownloadTokens(ctx context.Context) (int64, error)
+
 	/* Audit Log Queries */
 
 	InsertAuditLogCertificateDownload(ctx context.Context, certId int, sub, iss, ipAddress, rawUserAgent string, userAgent uasurfer.UserAgent) (*models.CertificateDownload, error)

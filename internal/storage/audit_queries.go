@@ -114,18 +114,3 @@ func (p *DatabaseProvider) GetRecentCertificateDownloadLogs(ctx context.Context,
 
 	return downloads, nil
 }
-
-// CreateWhitelistEvent creates an audit event for a whitelist entry
-func (p *DatabaseProvider) CreateWhitelistEvent(ctx context.Context, whitelistID int, actorIss, actorSub, eventType, notes string, clientIP, userAgent *string) error {
-	query := `
-        INSERT INTO firewall_whitelist_events (whitelist_id, actor_iss, actor_sub, event_type, notes, client_ip, user_agent)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `
-
-	_, err := p.pool.Exec(ctx, query, whitelistID, actorIss, actorSub, eventType, notes, clientIP, userAgent)
-	if err != nil {
-		return fmt.Errorf("failed to create whitelist event: %w", err)
-	}
-
-	return nil
-}

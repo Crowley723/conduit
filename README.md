@@ -1,43 +1,63 @@
-# Homelab Dashboard
+# Conduit
 
-A personal dashboard application for displaying homelab infrastructure metrics and projects. This application serves as a centralized view of Kubernetes cluster status, service metrics, and other homelab-related information.
+A web-based mTLS certificate management dashboard. Conduit provides a self-hosted interface for requesting, issuing, and downloading client certificates backed by Kubernetes cert-manager, with OIDC authentication and full audit logging.
 
 ## Purpose
 
-This dashboard is designed to be deployed at the root of a personal domain to showcase:
+Conduit is designed for teams and individuals who need a simple, secure way to manage mTLS client certificates without direct cluster access:
 
-- **Kubernetes Metrics**: Real-time cluster health, node status, and pod information
-- **Service Monitoring**: Traefik ingress metrics, pod uptime, and restart tracking
-- **Infrastructure Overview**: Visual representation of homelab services and their current state
-
-The application pulls metrics from Prometheus/Mimir and presents them through a clean, responsive web interface.
+- **Certificate Requests**: Users request certificates through a web UI; issued certificates are downloadable as bundles
+- **Kubernetes-backed Issuance**: Integrates with cert-manager for certificate lifecycle management
+- **Service Accounts**: Non-human clients can authenticate and request certificates via service accounts
+- **Audit Logging**: All certificate operations are recorded for compliance and visibility
 
 ## Architecture
 
-**Backend**: Go-based HTTP server with OIDC authentication
-- Fetches and caches Prometheus metrics
-- Handles user sessions and authentication
-- Serves API endpoints for frontend consumption
+**Backend**: Go HTTP server with OIDC authentication
+- Certificate request and download handlers
+- Kubernetes cert-manager integration for issuance
+- PostgreSQL for certificate records, users, service accounts, and audit log
+- Redis-backed session management
+- Background jobs for certificate creation and status polling
+- Leader election for distributed deployments
 
 **Frontend**: React application with TypeScript
 - TanStack Router for navigation
 - React Query for data management
-- Recharts for metric visualization
-- Tailwind CSS for styling
+- Tailwind CSS / shadcn-ui for styling
 
 ## Key Features
 
-- OIDC authentication for secure access to sensitive details
-- Real-time metrics from Prometheus/Mimir
-- Configurable dashboard cards and queries
-- TTL-based caching for performance
-- Mobile-responsive design
-- Docker deployment ready
+- OIDC authentication
+- Certificate request and download via web UI
+- Service account support for programmatic access
+- cert-manager integration (Kubernetes)
+- Audit log for all certificate operations
+- Docker and Helm deployment ready
 
 ## Development
 
-See `CLAUDE.md` for detailed development setup and commands.
+```bash
+# Install dependencies
+make install
+
+# Run full stack (backend + frontend)
+make dev
+
+# Run tests
+make test
+
+# Docker Compose
+make dev-docker
+```
 
 ## Deployment
 
 The application is containerized and includes Helm charts for Kubernetes deployment.
+
+## TODO
+
+- [ ] **CLI tool**
+  - [ ] Cleanup expired download tokens
+  - [ ] Cleanup expired certificates
+  - [ ] Cleanup old certificate download logs

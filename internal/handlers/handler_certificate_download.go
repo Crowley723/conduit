@@ -5,14 +5,23 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/Crowley723/conduit/internal/authorization"
 	"github.com/Crowley723/conduit/internal/middlewares"
-
+	"github.com/Crowley723/conduit/internal/models"
+	"github.com/Crowley723/conduit/internal/storage"
+	"github.com/avct/uasurfer"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"software.sslmate.com/src/go-pkcs12"
 )
 
@@ -27,249 +36,205 @@ type CertificateUnlockResponse struct {
 	ExpiresIn     int    `json:"expires_in,omitempty"`
 }
 
-type DownloadToken struct {
-	CertificateId int       `json:"certificate_id"`
-	PrincipalIss  string    `json:"principal_iss"`
-	PrincipalSub  string    `json:"principal_sub"`
-	Passphrase    string    `json:"passphrase"`
-	CreatedAt     time.Time `json:"created_at"`
-}
-
 var downloadTokenLifetime = 5 * time.Minute
-var downloadTokenKeyFmt = "download_token:%s"
 
-// POSTCertificateUnlock is the first step in downloading a certificate. The principal posts a passphrase they want the p12 file encrypted with and receive a one-time download token
+// POSTCertificateUnlock is the first step in downloading a certificate. The principal posts a passphrase
+// they want the p12 file encrypted with and receives a one-time download token.
 func POSTCertificateUnlock(ctx *middlewares.AppContext) {
-	ctx.SetJSONError(http.StatusNotImplemented, "Not Implemented")
-	return
-	//certificateIdParam := chi.URLParam(ctx.Request, "id")
-	//if certificateIdParam == "" {
-	//	ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-	//	return
-	//}
-	//
-	//certificateId, err := strconv.Atoi(strings.TrimSpace(certificateIdParam))
-	//if err != nil {
-	//	ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-	//	return
-	//}
-	//
-	//principal := ctx.GetPrincipal()
-	//if principal == nil {
-	//	ctx.SetJSONError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-	//	return
-	//}
-	//
-	//request, err := ctx.Storage.GetCertificateRequestByID(ctx, certificateId)
-	//if err != nil {
-	//	if errors.Is(err, storage.CertificateRequestNotFoundError) {
-	//		ctx.SetJSONError(http.StatusNotFound, http.StatusText(http.StatusNotFound))
-	//		return
-	//	}
-	//
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//// Check if principal owns the cert or has download_all scope
-	//canDownload := principal.MatchesOwner(request.OwnerIss, request.OwnerSub) && principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadCert)
-	//canDownloadAll := principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadAllCerts)
-	//
-	//if !canDownload && !canDownloadAll {
-	//	ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
-	//	return
-	//}
-	//
-	//var reqBody CertificateUnlockBody
-	//if err := json.NewDecoder(ctx.Request.Body).Decode(&reqBody); err != nil {
-	//	ctx.Logger.Error("failed to decode request body", "error", err)
-	//	ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-	//	return
-	//}
-	//
-	//if reqBody.Passphrase == "" || validatePassphraseComplexity(reqBody.Passphrase) != nil {
-	//	resp := CertificateUnlockResponse{
-	//		Unlocked: false,
-	//		Error:    fmt.Sprintf("passphrase must be at least 12 characters"),
-	//	}
-	//	ctx.WriteJSON(http.StatusBadRequest, resp)
-	//	return
-	//}
-	//
-	//tokenUUID := uuid.New().String()
-	//tokenHash := hashToken(tokenUUID, []byte(ctx.Config.Features.MTLSManagement.DownloadTokenHMACKey))
-	//tokenKey := fmt.Sprintf(downloadTokenKeyFmt, tokenHash)
-	//
-	//downloadToken := DownloadToken{
-	//	CertificateId: request.ID,
-	//	PrincipalIss:  principal.GetIss(),
-	//	PrincipalSub:  principal.GetSub(),
-	//	Passphrase:    reqBody.Passphrase,
-	//	CreatedAt:     time.Now(),
-	//}
-	//
-	////tokenData, _ := json.Marshal(downloadToken)
-	//
-	////if err := ctx.Cache.SetKey(ctx, tokenKey, tokenData, downloadTokenLifetime); err != nil {
-	////	ctx.Logger.Error("unable to store download token", "error", err)
-	////	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	////	return
-	////}
-	//
-	////TODO: refactor this to use database to store download token.
-	//
-	//resp := CertificateUnlockResponse{
-	//	Unlocked:      true,
-	//	DownloadToken: tokenUUID,
-	//	ExpiresIn:     int(downloadTokenLifetime.Seconds()),
-	//}
-	//
-	//ctx.WriteJSON(http.StatusOK, resp)
+	certificateIdParam := chi.URLParam(ctx.Request, "id")
+	if certificateIdParam == "" {
+		ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return
+	}
 
+	certificateId, err := strconv.Atoi(strings.TrimSpace(certificateIdParam))
+	if err != nil {
+		ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return
+	}
+
+	principal := ctx.GetPrincipal()
+	if principal == nil {
+		ctx.SetJSONError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		return
+	}
+
+	request, err := ctx.Storage.GetCertificateRequestByID(ctx, certificateId)
+	if err != nil {
+		if errors.Is(err, storage.CertificateRequestNotFoundError) {
+			ctx.SetJSONError(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			return
+		}
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	canDownload := principal.MatchesOwner(request.OwnerIss, request.OwnerSub) && principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadCert)
+	canDownloadAll := principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadAllCerts)
+
+	if !canDownload && !canDownloadAll {
+		ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
+		return
+	}
+
+	var reqBody CertificateUnlockBody
+	if err := json.NewDecoder(ctx.Request.Body).Decode(&reqBody); err != nil {
+		ctx.Logger.Error("failed to decode request body", "error", err)
+		ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return
+	}
+
+	if reqBody.Passphrase == "" || validatePassphraseComplexity(reqBody.Passphrase) != nil {
+		resp := CertificateUnlockResponse{
+			Unlocked: false,
+			Error:    "passphrase must be at least 12 characters",
+		}
+		ctx.WriteJSON(http.StatusBadRequest, resp)
+		return
+	}
+
+	tokenUUID := uuid.New().String()
+	tokenHash := hashToken(tokenUUID, []byte(ctx.Config.Features.MTLSManagement.DownloadTokenHMACKey))
+
+	if err := ctx.Storage.CreateDownloadToken(ctx, tokenHash, request.ID, principal.GetIss(), principal.GetSub(), reqBody.Passphrase, time.Now().Add(downloadTokenLifetime)); err != nil {
+		ctx.Logger.Error("unable to store download token", "error", err)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	resp := CertificateUnlockResponse{
+		Unlocked:      true,
+		DownloadToken: tokenUUID,
+		ExpiresIn:     int(downloadTokenLifetime.Seconds()),
+	}
+
+	ctx.WriteJSON(http.StatusOK, resp)
 }
 
 func GETCertificateDownload(ctx *middlewares.AppContext) {
-	ctx.SetJSONError(http.StatusNotImplemented, "Not Implemented")
-	return
+	certificateIdParam := chi.URLParam(ctx.Request, "id")
+	if certificateIdParam == "" {
+		ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return
+	}
 
-	//certificateIdParam := chi.URLParam(ctx.Request, "id")
-	//if certificateIdParam == "" {
-	//	ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-	//	return
-	//}
-	//
-	//certificateId, err := strconv.Atoi(strings.TrimSpace(certificateIdParam))
-	//if err != nil {
-	//	ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-	//	return
-	//}
-	//
-	//downloadTokenParam := strings.TrimSpace(ctx.Request.URL.Query().Get("token"))
-	//if downloadTokenParam == "" {
-	//	ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-	//	return
-	//}
-	//
-	//principal := ctx.GetPrincipal()
-	//if principal == nil {
-	//	ctx.SetJSONError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-	//	return
-	//}
-	//
-	//tokenHash := hashToken(downloadTokenParam, []byte(ctx.Config.Features.MTLSManagement.DownloadTokenHMACKey))
-	//
-	//downloadTokenJson, err := ctx.Cache.GetDelKey(ctx, fmt.Sprintf(downloadTokenKeyFmt, tokenHash))
-	//if err != nil {
-	//	ctx.Logger.Error("unable to fetch download token", "error", err)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//var downloadToken DownloadToken
-	//err = json.Unmarshal([]byte(downloadTokenJson), &downloadToken)
-	//if err != nil {
-	//	ctx.Logger.Error("failed to unmarshal download token", "error", err)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//if !principal.MatchesOwner(downloadToken.PrincipalIss, downloadToken.PrincipalSub) {
-	//	ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
-	//	return
-	//}
-	//
-	//if certificateId != downloadToken.CertificateId {
-	//	ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
-	//	return
-	//}
-	//
-	//request, err := ctx.Storage.GetCertificateRequestByID(ctx, certificateId)
-	//if err != nil {
-	//	if errors.Is(err, storage.CertificateRequestNotFoundError) {
-	//		ctx.SetJSONError(http.StatusNotFound, http.StatusText(http.StatusNotFound))
-	//		return
-	//	}
-	//
-	//	ctx.Logger.Warn("failed to fetch certificate request", "error", err)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//if request.Status != models.StatusIssued {
-	//	ctx.SetJSONError(http.StatusBadRequest, "Certificate is not issued yet")
-	//	return
-	//}
-	//
-	//// Check if principal owns the cert or has download_all scope
-	//canDownload := principal.MatchesOwner(request.OwnerIss, request.OwnerSub) && principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadCert)
-	//canDownloadAll := principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadAllCerts)
-	//
-	//if !canDownload && !canDownloadAll {
-	//	ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
-	//	return
-	//}
-	//
-	//if request.CertificateIdentifier == nil {
-	//	ctx.Logger.Error("certificate request missing identifier", "request_id", certificateId)
-	//	ctx.SetJSONError(http.StatusBadRequest, "Certificate identifier not found")
-	//	return
-	//}
-	//
-	//certPEM, keyPEM, caPEM, err := ctx.CertificateManager.GetCertificateData(
-	//	ctx,
-	//	*request.CertificateIdentifier,
-	//)
-	//
-	//if err != nil {
-	//	ctx.Logger.Error("failed to get certificate data",
-	//		"error", err,
-	//		"identifier", *request.CertificateIdentifier)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//host, _, err := net.SplitHostPort(ctx.Request.RemoteAddr)
-	//if err != nil {
-	//	ctx.Logger.Error("failed to parse remote address", "error", err)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//_, err = ctx.Storage.InsertAuditLogCertificateDownload(ctx, certificateId, principal.GetSub(), principal.GetIss(), host, ctx.Request.UserAgent(), *uasurfer.Parse(ctx.Request.UserAgent()))
-	//if err != nil {
-	//	ctx.Logger.Error("failed to insert download audit log", "error", err)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//ctx.Logger.Info("retrieved certificate data",
-	//	"identifier", *request.CertificateIdentifier,
-	//	"certPEMLen", len(certPEM),
-	//	"keyPEMLen", len(keyPEM),
-	//	"caPEMLen", len(caPEM))
-	//
-	//p12Bytes, err := GenerateP12(certPEM, keyPEM, caPEM, downloadToken.Passphrase)
-	//if err != nil {
-	//	ctx.Logger.Error("failed to generate P12", "error", err)
-	//	ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	//	return
-	//}
-	//
-	//ctx.Logger.Info("generated P12 file",
-	//	"p12Size", len(p12Bytes),
-	//	"certificateId", certificateId)
-	//
-	//filename := fmt.Sprintf("certificate-%d.p12", certificateId)
-	//
-	//ctx.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-	//ctx.Response.Header().Set("Content-Type", "application/x-pkcs12")
-	//ctx.Response.Header().Set("Content-Length", strconv.Itoa(len(p12Bytes)))
-	//
-	//_, err = ctx.Response.Write(p12Bytes)
-	//if err != nil {
-	//	ctx.Logger.Error("failed to write certificate p12", "error", err)
-	//	return
-	//}
+	certificateId, err := strconv.Atoi(strings.TrimSpace(certificateIdParam))
+	if err != nil {
+		ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return
+	}
+
+	downloadTokenParam := strings.TrimSpace(ctx.Request.URL.Query().Get("token"))
+	if downloadTokenParam == "" {
+		ctx.SetJSONError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		return
+	}
+
+	principal := ctx.GetPrincipal()
+	if principal == nil {
+		ctx.SetJSONError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		return
+	}
+
+	tokenHash := hashToken(downloadTokenParam, []byte(ctx.Config.Features.MTLSManagement.DownloadTokenHMACKey))
+
+	downloadToken, err := ctx.Storage.GetAndConsumeDownloadToken(ctx, tokenHash)
+	if err != nil {
+		if errors.Is(err, storage.DownloadTokenNotFoundOrExpired) {
+			ctx.SetJSONError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+			return
+		}
+		ctx.Logger.Error("unable to fetch download token", "error", err)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	if !principal.MatchesOwner(downloadToken.PrincipalIss, downloadToken.PrincipalSub) {
+		ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
+		return
+	}
+
+	if certificateId != downloadToken.CertificateID {
+		ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
+		return
+	}
+
+	request, err := ctx.Storage.GetCertificateRequestByID(ctx, certificateId)
+	if err != nil {
+		if errors.Is(err, storage.CertificateRequestNotFoundError) {
+			ctx.SetJSONError(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			return
+		}
+		ctx.Logger.Warn("failed to fetch certificate request", "error", err)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	if request.Status != models.StatusIssued {
+		ctx.SetJSONError(http.StatusBadRequest, "Certificate is not issued yet")
+		return
+	}
+
+	canDownload := principal.MatchesOwner(request.OwnerIss, request.OwnerSub) && principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadCert)
+	canDownloadAll := principal.HasScope(ctx.Config, authorization.ScopeMTLSDownloadAllCerts)
+
+	if !canDownload && !canDownloadAll {
+		ctx.SetJSONError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
+		return
+	}
+
+	if request.CertificateIdentifier == nil {
+		ctx.Logger.Error("certificate request missing identifier", "request_id", certificateId)
+		ctx.SetJSONError(http.StatusBadRequest, "Certificate identifier not found")
+		return
+	}
+
+	certPEM, keyPEM, caPEM, err := ctx.CertificateManager.GetCertificateData(ctx, *request.CertificateIdentifier)
+	if err != nil {
+		ctx.Logger.Error("failed to get certificate data", "error", err, "identifier", *request.CertificateIdentifier)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	host, _, err := net.SplitHostPort(ctx.Request.RemoteAddr)
+	if err != nil {
+		ctx.Logger.Error("failed to parse remote address", "error", err)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	_, err = ctx.Storage.InsertAuditLogCertificateDownload(ctx, certificateId, principal.GetSub(), principal.GetIss(), host, ctx.Request.UserAgent(), *uasurfer.Parse(ctx.Request.UserAgent()))
+	if err != nil {
+		ctx.Logger.Error("failed to insert download audit log", "error", err)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	ctx.Logger.Info("retrieved certificate data",
+		"identifier", *request.CertificateIdentifier,
+		"certPEMLen", len(certPEM),
+		"keyPEMLen", len(keyPEM),
+		"caPEMLen", len(caPEM))
+
+	p12Bytes, err := GenerateP12(certPEM, keyPEM, caPEM, downloadToken.Passphrase)
+	if err != nil {
+		ctx.Logger.Error("failed to generate P12", "error", err)
+		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	ctx.Logger.Info("generated P12 file", "p12Size", len(p12Bytes), "certificateId", certificateId)
+
+	filename := fmt.Sprintf("certificate-%d.p12", certificateId)
+	ctx.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	ctx.Response.Header().Set("Content-Type", "application/x-pkcs12")
+	ctx.Response.Header().Set("Content-Length", strconv.Itoa(len(p12Bytes)))
+
+	_, err = ctx.Response.Write(p12Bytes)
+	if err != nil {
+		ctx.Logger.Error("failed to write certificate p12", "error", err)
+		return
+	}
 }
 
 // GenerateP12 creates a PKCS12 bundle from PEM-encoded cert and key
