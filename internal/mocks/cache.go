@@ -11,7 +11,7 @@ package mocks
 
 import (
 	context "context"
-	data "homelab-dashboard/internal/data"
+	data "github.com/Crowley723/conduit/internal/data"
 	reflect "reflect"
 	time "time"
 

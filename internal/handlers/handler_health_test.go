@@ -2,8 +2,8 @@
 package handlers
 
 import (
-	"homelab-dashboard/internal/middlewares"
-	"homelab-dashboard/internal/testutil"
+	"github.com/Crowley723/conduit/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/testutil"
 	"testing"
 )
 

@@ -10,7 +10,7 @@
 package mocks
 
 import (
-	config "homelab-dashboard/internal/config"
+	config "github.com/Crowley723/conduit/internal/config"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"

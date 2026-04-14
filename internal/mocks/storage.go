@@ -11,7 +11,7 @@ package mocks
 
 import (
 	context "context"
-	models "homelab-dashboard/internal/models"
+	models "github.com/Crowley723/conduit/internal/models"
 	slog "log/slog"
 	reflect "reflect"
 	time "time"

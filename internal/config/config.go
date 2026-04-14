@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"homelab-dashboard/internal/authorization"
+	"github.com/Crowley723/conduit/internal/authorization"
 	"log/slog"
 	"net"
 	"os"

@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/models"
 	"net/http"
 	"time"
 

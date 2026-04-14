@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"homelab-dashboard/internal/config"
+	"github.com/Crowley723/conduit/internal/config"
 )
 
 func GetConnectionStringFromConfig(cfg *config.Config) string {

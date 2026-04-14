@@ -1,7 +1,7 @@
 package models
 
 import (
-	"homelab-dashboard/internal/config"
+	"github.com/Crowley723/conduit/internal/config"
 	"slices"
 	"time"
 )

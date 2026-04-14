@@ -1,18 +1,18 @@
 package distributed
 
 import (
-	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/metrics"
-	"homelab-dashboard/internal/middlewares"
 	"sync"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/middlewares"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type Election struct {
 	Redis      *redis.Client
-	InstanceID string // Unique identifier
+	InstanceID string
 	TTL        time.Duration
 	isLeader   bool
 	mu         sync.RWMutex
@@ -50,12 +50,8 @@ func (e *Election) campaign(ctx middlewares.AppContext) {
 
 	if e.isLeader && !wasLeader {
 		ctx.Logger.Info("became leader", "instance", e.InstanceID)
-		metrics.IsLeader.Set(1)
-		metrics.LeadershipChanges.Inc()
 	} else if !e.isLeader && wasLeader {
 		ctx.Logger.Info("lost leadership", "instance", e.InstanceID)
-		metrics.IsLeader.Set(0)
-		metrics.LeadershipChanges.Inc()
 	}
 }
 
@@ -101,7 +97,6 @@ func (e *Election) resign(ctx middlewares.AppContext) {
 		ctx.Logger.Error("failed to resign leadership", "error", err, "instance", e.InstanceID)
 	} else {
 		ctx.Logger.Info("resigned leadership", "instance", e.InstanceID)
-		metrics.IsLeader.Set(0)
 	}
 
 	e.isLeader = false

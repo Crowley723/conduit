@@ -6,7 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"homelab-dashboard/internal/config"
+	"github.com/Crowley723/conduit/internal/config"
 	"log/slog"
 	"sort"
 	"strings"

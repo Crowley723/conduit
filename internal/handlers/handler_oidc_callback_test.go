@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"homelab-dashboard/internal/models"
-	"homelab-dashboard/internal/testutil"
+	"github.com/Crowley723/conduit/internal/models"
+	"github.com/Crowley723/conduit/internal/testutil"
 	"log/slog"
 	"net/http"
 	"net/url"

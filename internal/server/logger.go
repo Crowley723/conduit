@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"homelab-dashboard/internal/config"
+	"github.com/Crowley723/conduit/internal/config"
 	"log/slog"
 	"os"
 	"runtime/debug"

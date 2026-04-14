@@ -9,8 +9,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/models"
 	"math/big"
 	"time"
 )

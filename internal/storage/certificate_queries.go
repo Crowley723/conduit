@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/models"
 	"time"
 
 	"github.com/jackc/pgx/v5"

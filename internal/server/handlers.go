@@ -1,11 +1,12 @@
 package server
 
 import (
-	"homelab-dashboard/internal/handlers"
-	"homelab-dashboard/internal/middlewares"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/handlers"
+	"github.com/Crowley723/conduit/internal/middlewares"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

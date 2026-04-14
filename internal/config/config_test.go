@@ -1,7 +1,7 @@
 package config
 
 import (
-	"homelab-dashboard/internal/authorization"
+	"github.com/Crowley723/conduit/internal/authorization"
 	"strings"
 	"testing"
 )

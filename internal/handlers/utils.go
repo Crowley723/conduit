@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"homelab-dashboard/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/middlewares"
 	"strings"
 )
 

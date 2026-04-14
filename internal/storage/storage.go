@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/models"
 	"log/slog"
 	"time"
 

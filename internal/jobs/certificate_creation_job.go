@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"homelab-dashboard/internal/middlewares"
-	"homelab-dashboard/internal/models"
-	"homelab-dashboard/internal/services/certificate"
+	"github.com/Crowley723/conduit/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/models"
+	"github.com/Crowley723/conduit/internal/services/certificate"
 	"strings"
 	"time"
 )

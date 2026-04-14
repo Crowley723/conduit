@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"errors"
-	"homelab-dashboard/internal/testutil"
+	"github.com/Crowley723/conduit/internal/testutil"
 	"log/slog"
 	"net/http"
 	"testing"

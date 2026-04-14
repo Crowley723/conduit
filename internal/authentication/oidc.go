@@ -6,9 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/middlewares"
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/models"
 	"net/url"
 
 	"github.com/coreos/go-oidc/v3/oidc"

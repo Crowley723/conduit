@@ -3,8 +3,8 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"homelab-dashboard/internal/authentication"
-	"homelab-dashboard/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/authentication"
+	"github.com/Crowley723/conduit/internal/middlewares"
 	"net/http"
 	"net/url"
 )

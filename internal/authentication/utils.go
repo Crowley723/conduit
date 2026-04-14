@@ -1,7 +1,7 @@
 package authentication
 
 import (
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/models"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )

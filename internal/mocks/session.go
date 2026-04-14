@@ -10,8 +10,8 @@
 package mocks
 
 import (
-	middlewares "homelab-dashboard/internal/middlewares"
-	models "homelab-dashboard/internal/models"
+	middlewares "github.com/Crowley723/conduit/internal/middlewares"
+	models "github.com/Crowley723/conduit/internal/models"
 	http "net/http"
 	reflect "reflect"
 	time "time"

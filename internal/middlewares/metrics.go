@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"homelab-dashboard/internal/metrics"
+	"github.com/Crowley723/conduit/internal/metrics"
 	"net/http"
 	"strconv"
 	"time"

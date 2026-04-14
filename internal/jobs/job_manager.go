@@ -3,7 +3,7 @@ package jobs
 import (
 	"context"
 	"errors"
-	"homelab-dashboard/internal/distributed"
+	"github.com/Crowley723/conduit/internal/distributed"
 	"log/slog"
 	"sync"
 	"time"

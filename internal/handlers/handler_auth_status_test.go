@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"homelab-dashboard/internal/models"
-	"homelab-dashboard/internal/testutil"
+	"github.com/Crowley723/conduit/internal/models"
+	"github.com/Crowley723/conduit/internal/testutil"
 	"net/http"
 	"testing"
 )

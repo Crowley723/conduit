@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"homelab-dashboard/internal/middlewares"
-	"homelab-dashboard/internal/models"
+	"github.com/Crowley723/conduit/internal/middlewares"
+	"github.com/Crowley723/conduit/internal/models"
 	"net/http"
 )
 

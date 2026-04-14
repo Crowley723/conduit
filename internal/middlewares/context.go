@@ -3,9 +3,9 @@ package middlewares
 import (
 	"context"
 	"encoding/json"
-	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/services/certificate"
-	"homelab-dashboard/internal/storage"
+	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/services/certificate"
+	"github.com/Crowley723/conduit/internal/storage"
 	"log/slog"
 	"net/http"
 )

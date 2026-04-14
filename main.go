@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/server"
-	"homelab-dashboard/internal/version"
+	"github.com/Crowley723/conduit/internal/config"
+	"github.com/Crowley723/conduit/internal/server"
+	"github.com/Crowley723/conduit/internal/version"
 	"log"
 	"os"
 )
