@@ -6,13 +6,10 @@ import (
 	"fmt"
 	"homelab-dashboard/internal/authentication"
 	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/data"
 	"homelab-dashboard/internal/distributed"
 	"homelab-dashboard/internal/jobs"
-	"homelab-dashboard/internal/metrics"
 	"homelab-dashboard/internal/middlewares"
 	"homelab-dashboard/internal/services/certificate"
-	"homelab-dashboard/internal/services/firewall"
 	"homelab-dashboard/internal/storage"
 	"log/slog"
 	"net/http"
@@ -22,8 +19,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/redis/go-redis/extra/redisprometheus/v9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -33,8 +28,6 @@ type Server struct {
 	appCtx      *middlewares.AppContext
 	httpServer  *http.Server
 	debugServer *http.Server
-	dataService *data.Service
-	cache       data.Provider
 	election    *distributed.Election
 	jobManager  *jobs.JobManager
 	ctx         *context.Context
@@ -53,12 +46,6 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	oidcProvider, err := authentication.NewRealOIDCProvider(ctx, cfg.OIDC)
-	if err != nil {
-		cancel()
-		return nil, err
-	}
-
-	dataService, cache, err := setupDataService(cfg, logger)
 	if err != nil {
 		cancel()
 		return nil, err
@@ -88,13 +75,6 @@ func New(cfg *config.Config) (*Server, error) {
 				DB:           cfg.Redis.LeaderIndex,
 				MinIdleConns: 2,
 			})
-		}
-
-		if cfg.Server.Debug != nil && cfg.Server.Debug.Enabled {
-			collector := redisprometheus.NewCollector(metrics.Namespace, "election", client)
-			if err := prometheus.Register(collector); err != nil {
-				logger.Debug("failed to register redis election collector: already registered", "error", err)
-			}
 		}
 
 		hostname := os.Getenv("HOSTNAME")
@@ -148,13 +128,9 @@ func New(cfg *config.Config) (*Server, error) {
 		}
 	}
 
-	appCtx := middlewares.NewAppContext(ctx, cfg, logger, cache, sessionManager, oidcProvider, database, certProvider)
+	appCtx := middlewares.NewAppContext(ctx, cfg, logger, sessionManager, oidcProvider, database, certProvider)
 
 	jobManager := jobs.NewJobManager(election, logger)
-
-	interval := calculateFetchInterval(cfg, cfg.Data.FallbackFetchInterval)
-	dataFetchJob := jobs.NewDataFetchJob(dataService, appCtx, interval, logger)
-	jobManager.Register(dataFetchJob)
 
 	if cfg.Features.MTLSManagement.Enabled {
 		certificateCreationJob := jobs.NewCertificateCreationJob(appCtx, cfg.Features.MTLSManagement.BackgroundJobConfig.ApprovedCertificatePollingInterval)
@@ -162,33 +138,6 @@ func New(cfg *config.Config) (*Server, error) {
 
 		certificateIssuedJob := jobs.NewCertificateIssuedStatusJob(appCtx, cfg.Features.MTLSManagement.BackgroundJobConfig.IssuedCertificatePollingInterval)
 		jobManager.Register(certificateIssuedJob)
-	}
-
-	if cfg.Features.FirewallManagement.Enabled {
-		// Create router client for firewall communication
-		routerClient := firewall.NewRouterClient(*cfg)
-
-		// Register firewall sync job
-		firewallSyncJob := jobs.NewFirewallSyncJob(
-			appCtx,
-			routerClient,
-			cfg.Features.FirewallManagement.BackgroundJobConfig.SyncInterval,
-			logger,
-		)
-		jobManager.Register(firewallSyncJob)
-
-		// Register expiration job
-		firewallExpirationJob := jobs.NewFirewallExpirationJob(
-			appCtx,
-			cfg.Features.FirewallManagement.BackgroundJobConfig.ExpirationInterval,
-			logger,
-		)
-		jobManager.Register(firewallExpirationJob)
-
-		logger.Info("firewall management jobs registered",
-			"sync_interval", cfg.Features.FirewallManagement.BackgroundJobConfig.SyncInterval,
-			"expiration_interval", cfg.Features.FirewallManagement.BackgroundJobConfig.ExpirationInterval,
-		)
 	}
 
 	router := setupRouter(appCtx)
@@ -213,7 +162,6 @@ func New(cfg *config.Config) (*Server, error) {
 		appCtx:      appCtx,
 		httpServer:  server,
 		debugServer: debugServer,
-		dataService: dataService,
 		election:    election,
 		jobManager:  jobManager,
 		ctx:         &ctx,
@@ -286,48 +234,4 @@ func (s *Server) Start() error {
 
 	s.logger.Info("Server Existed")
 	return nil
-}
-
-func setupDataService(cfg *config.Config, logger *slog.Logger) (*data.Service, data.Provider, error) {
-	mimirClient, err := data.NewMimirClient(
-		cfg.Data.PrometheusURL,
-		cfg.Data.BasicAuth.Username,
-		cfg.Data.BasicAuth.Password,
-	)
-
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create new mimir client: %w", err)
-	}
-
-	cache, err := data.NewCacheProvider(cfg, logger)
-	if err != nil {
-		logger.Error("error setting up cache provider", "error", err)
-	}
-	return data.NewService(mimirClient, cache, logger, cfg.Data.Queries), cache, nil
-}
-
-// calculateFetchInterval determines how often the background data fetching should happen, based completely on the shortest configured ttl, falling back to the default if there are no ttl configured.
-func calculateFetchInterval(cfg *config.Config, defaultInterval time.Duration) time.Duration {
-	var minTTL time.Duration
-	found := false
-
-	for _, q := range cfg.Data.Queries {
-		if q.Disabled || q.TTL <= 0 {
-			continue
-		}
-
-		if !found || q.TTL < minTTL {
-			minTTL = q.TTL
-			found = true
-		}
-	}
-
-	if !found {
-		minTTL = defaultInterval
-	}
-
-	if minTTL < time.Second*30 {
-		minTTL = time.Second * 30
-	}
-	return minTTL
 }

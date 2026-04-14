@@ -16,18 +16,6 @@ const (
 	ScopeMTLSSelfApproveCerts = "mtls:self_approve_certs"
 )
 
-const (
-	ScopeFirewallReadOwn    = "firewall:read:own"
-	ScopeFirewallRequestOwn = "firewall:request:own"
-	ScopeFirewallRevokeOwn  = "firewall:revoke:own"
-)
-
-const (
-	ScopeFirewallReadAll   = "firewall:read:all"
-	ScopeFirewallRevokeAll = "firewall:revoke:all"
-	ScopeFirewallBlacklist = "firewall:blacklist"
-)
-
 // GetAllValidScopes returns all valid authorization scopes defined in the system
 func GetAllValidScopes() []string {
 	return []string{
@@ -41,11 +29,5 @@ func GetAllValidScopes() []string {
 		ScopeMTLSReadAllCerts,
 		ScopeMTLSAutoApproveCert,
 		ScopeMTLSSelfApproveCerts,
-		ScopeFirewallReadOwn,
-		ScopeFirewallRequestOwn,
-		ScopeFirewallRevokeOwn,
-		ScopeFirewallReadAll,
-		ScopeFirewallRevokeAll,
-		ScopeFirewallBlacklist,
 	}
 }

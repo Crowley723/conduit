@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"homelab-dashboard/internal/config"
-	"homelab-dashboard/internal/data"
 	"homelab-dashboard/internal/services/certificate"
 	"homelab-dashboard/internal/storage"
 	"log/slog"
@@ -17,9 +16,7 @@ type AppContext struct {
 	Logger             *slog.Logger
 	SessionManager     SessionProvider
 	OIDCProvider       OIDCProvider
-	Cache              data.Provider
 	Storage            storage.Provider
-	KubernetesClient   *certificate.KubernetesCertificateProvider
 	CertificateManager certificate.Provider
 
 	principal Principal
@@ -36,17 +33,16 @@ func AppContextMiddleware(baseCtx *AppContext) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestCtx := &AppContext{
-				Context:          r.Context(),
-				Config:           baseCtx.Config,
-				Logger:           baseCtx.Logger,
-				SessionManager:   baseCtx.SessionManager,
-				OIDCProvider:     baseCtx.OIDCProvider,
-				Cache:            baseCtx.Cache,
-				Storage:          baseCtx.Storage,
-				KubernetesClient: baseCtx.KubernetesClient,
-				principal:        baseCtx.principal,
-				Request:          r,
-				Response:         w,
+				Context:            r.Context(),
+				Config:             baseCtx.Config,
+				Logger:             baseCtx.Logger,
+				SessionManager:     baseCtx.SessionManager,
+				OIDCProvider:       baseCtx.OIDCProvider,
+				Storage:            baseCtx.Storage,
+				CertificateManager: baseCtx.CertificateManager,
+				principal:          baseCtx.principal,
+				Request:            r,
+				Response:           w,
 			}
 
 			ctx := context.WithValue(r.Context(), appContextKey, requestCtx)
@@ -87,14 +83,13 @@ func (ctx *AppContext) Redirect(url string, status int) {
 	http.Redirect(ctx.Response, ctx.Request, url, status)
 }
 
-func NewAppContext(ctx context.Context, cfg *config.Config, logger *slog.Logger, cache data.Provider, sessionManager SessionProvider, oidcProvider OIDCProvider, storage storage.Provider, certificates certificate.Provider) *AppContext {
+func NewAppContext(ctx context.Context, cfg *config.Config, logger *slog.Logger, sessionManager SessionProvider, oidcProvider OIDCProvider, storage storage.Provider, certificates certificate.Provider) *AppContext {
 	return &AppContext{
 		Context:            ctx,
 		Config:             cfg,
 		Logger:             logger,
 		SessionManager:     sessionManager,
 		OIDCProvider:       oidcProvider,
-		Cache:              cache,
 		Storage:            storage,
 		CertificateManager: certificates,
 		principal:          nil,

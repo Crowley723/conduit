@@ -223,16 +223,6 @@ func validateConfig(config *Config) error {
 		return err
 	}
 
-	err = config.validateDataConfig()
-	if err != nil {
-		return err
-	}
-
-	err = config.validateCacheConfig()
-	if err != nil {
-		return err
-	}
-
 	if config.Cache.Type == "redis" || config.Sessions.Store == "redis" {
 		err = config.validateRedisConfig()
 		if err != nil {
@@ -401,93 +391,6 @@ func (c *Config) validateSessionConfig() error {
 	return nil
 }
 
-func (c *Config) validateDataConfig() (err error) {
-	if c.Data.PrometheusURL == "" {
-		return fmt.Errorf("data.prometheus_url is required")
-	}
-
-	if c.Data.BasicAuth != nil {
-		if c.Data.BasicAuth.Username == "" {
-			return fmt.Errorf("data.basic_auth.username is required")
-		}
-		if c.Data.BasicAuth.Password == "" {
-			return fmt.Errorf("data.basic_auth.password is required")
-		}
-	}
-
-	if len(c.Data.Queries) > 0 {
-		if err = c.validateDataQueriesConfig(); err != nil {
-			return err
-		}
-	}
-
-	if c.Data.FallbackFetchInterval.Seconds() < 0 {
-		c.Data.FallbackFetchInterval = defaultDataConfig.FallbackFetchInterval
-	} else if c.Data.FallbackFetchInterval.Seconds() < 30 && c.Data.FallbackFetchInterval.Seconds() > 0 {
-		return fmt.Errorf("data.fallback_fetch_interval cannot be less than 30 seconds")
-	}
-
-	return nil
-}
-
-func (c *Config) validateDataQueriesConfig() (err error) {
-
-	queries := c.Data.Queries
-
-	for i, query := range queries {
-		if query.Disabled {
-			continue
-		}
-
-		if query.Name == "" {
-			return fmt.Errorf("data.queries[%d].name is required", i)
-		}
-
-		if query.Query == "" {
-			return fmt.Errorf("data.queries[%d].query is required", i)
-		}
-
-		if query.TTL.Seconds() == 0 {
-			queries[i].TTL = 30 * time.Second
-		} else if query.TTL.Seconds() < 30 {
-			return fmt.Errorf("data.queries[%d].ttl cannot be less than 30s", i)
-		}
-
-		if query.Type == "range" {
-			if query.Range == "" {
-				return fmt.Errorf("data.queries[%d].range is required for range queries", i)
-			}
-
-			if query.Step == "" {
-				return fmt.Errorf("data.queries[%d].step is required for range queries", i)
-			}
-		} else if query.Type != "" {
-			return fmt.Errorf("invalid query type: %s", query.Type)
-		}
-	}
-
-	return nil
-}
-
-func (c *Config) validateCacheConfig() error {
-	if c.Cache.Type == "" {
-		c.Cache.Type = "memory"
-	}
-
-	switch c.Cache.Type {
-	case "memory":
-		break
-	case "redis":
-		if c.Redis == nil {
-			return fmt.Errorf("redis configuration must be enabled to use redis for data cache")
-		}
-	default:
-		return fmt.Errorf("invalid cache type: %s, must be 'memory' or 'redis'", c.Cache.Type)
-	}
-
-	return nil
-}
-
 func (c *Config) validateRedisConfig() error {
 	if c.Redis == nil {
 		return fmt.Errorf("redis config is nil")
@@ -608,12 +511,6 @@ func (c *Config) ValidateFeaturesConfig() error {
 		}
 	}
 
-	if c.Features.FirewallManagement.Enabled {
-		if err := c.ValidateFirewallManagementConfig(); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -648,7 +545,7 @@ func (c *Config) ValidateMTLSManagementConfig() error {
 		return fmt.Errorf("features.mtls_management.max_certificate_validity_days cannot be less than min_certificate_validity_days")
 	}
 
-	if c.Features.MTLSManagement.Kubernetes == nil && c.Features.MTLSManagement.Kubernetes.Enabled {
+	if c.Features.MTLSManagement.Kubernetes == nil {
 		c.Features.MTLSManagement.Kubernetes = DefaultMTLSManagementKubernetesConfig
 	}
 
@@ -673,21 +570,36 @@ func (c *Config) ValidateMTLSManagementConfig() error {
 		c.Features.MTLSManagement.BackgroundJobConfig.IssuedCertificatePollingInterval = DefaultMTLSBackgroundJobConfig.IssuedCertificatePollingInterval
 	}
 
-	// Validate certificate issuer configuration
-	if c.Features.MTLSManagement.CertificateIssuer == nil {
-		return fmt.Errorf("features.mtls_management.certificate_issuer is required when mtls_management is enabled")
+	err := c.ValidateMTLSManagementKubernetesConfig()
+	if err != nil {
+		return err
 	}
 
-	if c.Features.MTLSManagement.CertificateIssuer.Name == "" {
-		return fmt.Errorf("features.mtls_management.certificate_issuer.name is required when mtls_management is enabled")
+	return nil
+}
+
+func (c *Config) ValidateMTLSManagementKubernetesConfig() error {
+	if c.Features.MTLSManagement.Kubernetes == nil {
+		return nil
 	}
 
-	if c.Features.MTLSManagement.CertificateIssuer.Kind == "" {
-		return fmt.Errorf("features.mtls_management.certificate_issuer.kind is required when mtls_management is enabled")
+	if !c.Features.MTLSManagement.Kubernetes.Enabled {
+		return nil
 	}
 
-	// Validate issuer kind is either Issuer or ClusterIssuer
-	kind := c.Features.MTLSManagement.CertificateIssuer.Kind
+	if c.Features.MTLSManagement.Kubernetes.Issuer == nil {
+		return fmt.Errorf("features.mtls_management.kubernetes.issuer is required when features.mtls_management.kubernetes is enabled")
+	}
+
+	if c.Features.MTLSManagement.Kubernetes.Issuer.Name == "" {
+		return fmt.Errorf("features.mtls_management.kubernetes.issuer.name is required when features.mtls_management.kubernetes is enabled")
+	}
+
+	if c.Features.MTLSManagement.Kubernetes.Issuer.Kind == "" {
+		return fmt.Errorf("features.mtls_management.kubernetes.issuer.kind is required when features.mtls_management.kubernetes is enabled")
+	}
+
+	kind := c.Features.MTLSManagement.Kubernetes.Issuer.Kind
 	if kind != "Issuer" && kind != "ClusterIssuer" {
 		return fmt.Errorf("features.mtls_management.certificate_issuer.kind must be either 'Issuer' or 'ClusterIssuer', got '%s'", kind)
 	}
@@ -695,116 +607,11 @@ func (c *Config) ValidateMTLSManagementConfig() error {
 	return nil
 }
 
-func (c *Config) ValidateFirewallManagementConfig() error {
-	if c.Features == nil || !c.Features.FirewallManagement.Enabled {
-		return nil
-	}
-
-	if c.Storage == nil || !c.Storage.Enabled {
-		return fmt.Errorf("storage must be enabled when firewall_management is enabled")
-	}
-
-	if c.Features.FirewallManagement.RouterEndpoint == "" {
-		return fmt.Errorf("features.firewall_management.router_endpoint is required when firewall_management is enabled")
-	}
-
-	if c.Features.FirewallManagement.RouterEndpoint[len(c.Features.FirewallManagement.RouterEndpoint)-1] == '/' {
-		c.Features.FirewallManagement.RouterEndpoint = c.Features.FirewallManagement.RouterEndpoint[:len(c.Features.FirewallManagement.RouterEndpoint)-1]
-	}
-
-	if err := validateURL(c.Features.FirewallManagement.RouterEndpoint, "features.firewall_management.router_endpoint"); err != nil {
-		return err
-	}
-
-	if c.Features.FirewallManagement.RouterAPIKey == "" {
-		return fmt.Errorf("features.firewall_management.router_api_key is required when firewall_management is enabled")
-	}
-
-	if c.Features.FirewallManagement.RouterAPISecret == "" {
-		return fmt.Errorf("features.firewall_management.router_api_secret is required when firewall_management is enabled")
-	}
-
-	if c.Features.FirewallManagement.BackgroundJobConfig == nil {
-		c.Features.FirewallManagement.BackgroundJobConfig = DefaultFirewallBackgroundJobConfig
-	}
-
-	if c.Features.FirewallManagement.BackgroundJobConfig.SyncInterval == 0 {
-		c.Features.FirewallManagement.BackgroundJobConfig.SyncInterval = DefaultFirewallBackgroundJobConfig.SyncInterval
-	}
-
-	if c.Features.FirewallManagement.BackgroundJobConfig.SyncInterval < 30*time.Second {
-		return fmt.Errorf("features.firewall_management.background_job_config.sync_interval cannot be less than 30 seconds")
-	}
-
-	if c.Features.FirewallManagement.BackgroundJobConfig.ExpirationInterval == 0 {
-		c.Features.FirewallManagement.BackgroundJobConfig.ExpirationInterval = DefaultFirewallBackgroundJobConfig.ExpirationInterval
-	}
-
-	if c.Features.FirewallManagement.BackgroundJobConfig.ExpirationInterval < 1*time.Minute {
-		return fmt.Errorf("features.firewall_management.background_job_config.expiration_interval cannot be less than 1 minute")
-	}
-
-	if len(c.Features.FirewallManagement.Aliases) == 0 {
-		return fmt.Errorf("features.firewall_management.aliases must have at least one alias configured when firewall_management is enabled")
-	}
-
-	aliasNames := make(map[string]bool)
-	for i, alias := range c.Features.FirewallManagement.Aliases {
-		if alias.Name == "" {
-			return fmt.Errorf("features.firewall_management.aliases[%d].name is required", i)
-		}
-
-		if alias.UUID == "" {
-			return fmt.Errorf("features.firewall_management.aliases[%d].uuid is required", i)
-		}
-
-		if len(alias.UUID) != 36 {
-			return fmt.Errorf("features.firewall_management.aliases[%d].uuid must be a valid UUID", i)
-		}
-
-		if alias.AuthGroup == "" {
-			return fmt.Errorf("features.firewall_management.aliases[%d].auth_group is required", i)
-		}
-
-		if _, exists := c.Authorization.GroupScopes[alias.AuthGroup]; !exists {
-			return fmt.Errorf("features.firewall_management.aliases[%d].auth_group '%s' does not exist in authorization.group_scopes", i, alias.AuthGroup)
-		}
-
-		if alias.MaxIPsPerUser <= 0 {
-			return fmt.Errorf("features.firewall_management.aliases[%d].max_ips_per_user must be greater than 0", i)
-		}
-
-		if alias.MaxTotalIPs <= 0 {
-			return fmt.Errorf("features.firewall_management.aliases[%d].max_total_ips must be greater than 0", i)
-		}
-
-		if alias.MaxIPsPerUser > alias.MaxTotalIPs {
-			return fmt.Errorf("features.firewall_management.aliases[%d].max_ips_per_user (%d) cannot be greater than max_total_ips (%d)",
-				i, alias.MaxIPsPerUser, alias.MaxTotalIPs)
-		}
-
-		if alias.DefaultTTL != nil && *alias.DefaultTTL < 1*time.Hour {
-			return fmt.Errorf("features.firewall_management.aliases[%d].default_ttl cannot be less than 1 hour if set", i)
-		}
-
-		key := fmt.Sprintf("%s:%s", alias.Name, alias.UUID)
-		if aliasNames[key] {
-			// This is actually intentional - same UUID with different groups/limits
-			// So we just note it but don't error
-		}
-		aliasNames[key] = true
-	}
-
-	return nil
-}
-
 func (c *Config) validateAuthorizationConfig() error {
-	// Apply default authorization config if not set
 	if c.Authorization.GroupScopes == nil || len(c.Authorization.GroupScopes) == 0 {
 		c.Authorization = DefaultAuthorizationConfig
 	}
 
-	// Validate that each scope is a known/valid scope
 	validScopes := authorization.GetAllValidScopes()
 	for group, scopes := range c.Authorization.GroupScopes {
 		if len(scopes) == 0 {

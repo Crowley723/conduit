@@ -11,8 +11,6 @@ type Config struct {
 	Log           LogConfig           `yaml:"log"`
 	CORS          CORSConfig          `yaml:"cors"`
 	Sessions      SessionConfig       `yaml:"sessions"`
-	Data          DataConfig          `yaml:"data"`
-	Cache         CacheConfig         `yaml:"cache"`
 	Authorization AuthorizationConfig `yaml:"authorization"`
 	Redis         *RedisConfig        `yaml:"redis"`
 	Distributed   *DistributedConfig  `yaml:"distributed"`
@@ -97,36 +95,9 @@ var DefaultSessionConfig = SessionConfig{
 	Secure:         true,
 }
 
-type DataConfig struct {
-	PrometheusURL         string            `yaml:"prometheus_url"`
-	BasicAuth             *BasicAuth        `yaml:"basic_auth"`
-	Queries               []PrometheusQuery `yaml:"queries"`
-	FallbackFetchInterval time.Duration     `yaml:"fallback_fetch_interval"`
-}
-
-var defaultDataConfig = DataConfig{
-	FallbackFetchInterval: 10 * time.Minute,
-}
-
 type BasicAuth struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
-}
-
-type PrometheusQuery struct {
-	Name          string        `yaml:"name"`
-	Disabled      bool          `yaml:"disabled"`
-	Query         string        `yaml:"query"`
-	Type          string        `yaml:"type"`
-	TTL           time.Duration `yaml:"ttl"`
-	Range         string        `yaml:"range"`
-	Step          string        `yaml:"step"`
-	RequireAuth   bool          `yaml:"require_auth"`
-	RequiredGroup string        `yaml:"required_group"`
-}
-
-type CacheConfig struct {
-	Type string `yaml:"type"` //  "memory" or "redis"
 }
 
 type RedisConfig struct {
@@ -176,8 +147,7 @@ var DefaultStorageConfig = StorageConfig{
 }
 
 type FeaturesConfig struct {
-	MTLSManagement     MTLSManagement     `yaml:"mtls_management,omitempty"`
-	FirewallManagement FirewallManagement `yaml:"firewall_management,omitempty"`
+	MTLSManagement MTLSManagement `yaml:"mtls_management,omitempty"`
 }
 
 var DefaultFeaturesConfig = FeaturesConfig{
@@ -191,23 +161,24 @@ type MTLSManagement struct {
 	AllowAdminsToApproveOwnRequests bool                     `yaml:"allow_admins_to_approve_own_requests"`
 	MinCertificateValidityDays      int                      `yaml:"min_certificate_validity_days"`
 	MaxCertificateValidityDays      int                      `yaml:"max_certificate_validity_days"`
-	CertificateIssuer               *CertificateIssuer       `yaml:"certificate_issuer,omitempty"`
 	CertificateSubject              *CertificateSubject      `yaml:"certificate_subject,omitempty"`
 	BackgroundJobConfig             *MTLSBackgroundJobConfig `yaml:"background_job_config,omitempty"`
 	Kubernetes                      *KubernetesConfig        `yaml:"kubernetes,omitempty"`
 }
 
 type KubernetesConfig struct {
-	Enabled    bool   `yaml:"enabled"`
-	Namespace  string `yaml:"namespace"`
-	Kubeconfig string `yaml:"kubeconfig"`
-	InCluster  bool   `yaml:"in_cluster"`
+	Enabled    bool               `yaml:"enabled"`
+	Namespace  string             `yaml:"namespace"`
+	Kubeconfig string             `yaml:"kubeconfig"`
+	InCluster  bool               `yaml:"in_cluster"`
+	Issuer     *CertificateIssuer `yaml:"issuer"`
 }
 
 var DefaultMTLSManagementKubernetesConfig = &KubernetesConfig{
 	Enabled:   false,
 	InCluster: true,
 	Namespace: "conduit",
+	Issuer:    nil,
 }
 
 type CertificateIssuer struct {
@@ -246,44 +217,8 @@ var DefaultMTLSIssuerConfig = MTLSManagement{
 	MinCertificateValidityDays:      30,
 	MaxCertificateValidityDays:      365,
 	Kubernetes:                      DefaultMTLSManagementKubernetesConfig,
-	CertificateIssuer:               nil,
 	CertificateSubject:              DefaultCertificateSubject,
 	BackgroundJobConfig:             DefaultMTLSBackgroundJobConfig,
-}
-
-type FirewallManagement struct {
-	Enabled             bool                         `yaml:"enabled"`
-	RouterEndpoint      string                       `yaml:"router_endpoint"`
-	RouterAPIKey        string                       `yaml:"router_api_key"`
-	RouterAPISecret     string                       `yaml:"router_api_secret"`
-	Aliases             []FirewallAliasConfig        `yaml:"aliases"`
-	BackgroundJobConfig *FirewallBackgroundJobConfig `yaml:"background_job_config,omitempty"`
-}
-
-type FirewallAliasConfig struct {
-	Name          string         `yaml:"name"`
-	UUID          string         `yaml:"uuid"`
-	Description   string         `yaml:"description"`
-	MaxIPsPerUser int            `yaml:"max_ips_per_user"`
-	MaxTotalIPs   int            `yaml:"max_total_ips"`
-	DefaultTTL    *time.Duration `yaml:"default_ttl"` // nil = no expiration
-	AuthGroup     string         `yaml:"auth_group"`  // References authorization.group_scopes key
-}
-
-type FirewallBackgroundJobConfig struct {
-	SyncInterval       time.Duration `yaml:"sync_interval"`
-	ExpirationInterval time.Duration `yaml:"expiration_interval"`
-}
-
-var DefaultFirewallBackgroundJobConfig = &FirewallBackgroundJobConfig{
-	SyncInterval:       5 * time.Minute,
-	ExpirationInterval: 1 * time.Hour,
-}
-
-var DefaultFirewallManagement = FirewallManagement{
-	Enabled:             false,
-	Aliases:             []FirewallAliasConfig{},
-	BackgroundJobConfig: DefaultFirewallBackgroundJobConfig,
 }
 
 type AuthorizationConfig struct {
@@ -308,14 +243,6 @@ var DefaultAuthorizationConfig = AuthorizationConfig{
 			authorization.ScopeMTLSReadCert,
 			authorization.ScopeMTLSRenewCert,
 			authorization.ScopeMTLSDownloadCert,
-		},
-		"conduit:firewall:admin": {
-			authorization.ScopeFirewallReadOwn,
-			authorization.ScopeFirewallRequestOwn,
-			authorization.ScopeFirewallRevokeOwn,
-			authorization.ScopeFirewallReadAll,
-			authorization.ScopeFirewallRevokeAll,
-			authorization.ScopeFirewallBlacklist,
 		},
 	},
 }

@@ -52,7 +52,7 @@ func NewKubernetesClient(ctx context.Context, cfg *config.Config, logger *slog.L
 	}
 
 	k8sCfg := cfg.Features.MTLSManagement.Kubernetes
-	issuerCfg := cfg.Features.MTLSManagement.CertificateIssuer
+	issuerCfg := cfg.Features.MTLSManagement.Kubernetes.Issuer
 	subjectCfg := cfg.Features.MTLSManagement.CertificateSubject
 
 	if issuerCfg == nil {

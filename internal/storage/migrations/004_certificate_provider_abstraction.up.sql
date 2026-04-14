@@ -17,3 +17,11 @@ ALTER TABLE certificate_requests
     DROP COLUMN k8s_secret_name;
 
 CREATE INDEX idx_cert_requests_identifier ON certificate_requests(certificate_identifier);
+
+CREATE TABLE issued_certificates (
+    identifier TEXT PRIMARY KEY,
+    cert_pem TEXT NOT NULL,
+    key_pem TEXT NOT NULL,
+    ca_pem TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

@@ -77,7 +77,7 @@ func setupRouter(ctx *middlewares.AppContext) *chi.Mux {
 		}
 
 		if ctx.Config.Storage.Enabled && ctx.Config.Features.MTLSManagement.Enabled {
-			r.Route("/certificate", func(r chi.Router) {
+			r.Route("/certificates", func(r chi.Router) {
 				r.Group(func(r chi.Router) {
 					r.Use(middlewares.RequireAuth)
 					r.Post("/request", ctx.HandlerFunc(handlers.POSTCertificateRequest))
@@ -94,23 +94,6 @@ func setupRouter(ctx *middlewares.AppContext) *chi.Mux {
 				})
 			})
 		}
-
-		//firewall management does not support service accounts until groups have been implemented for service accounts
-		if ctx.Config.Storage.Enabled && ctx.Config.Features.FirewallManagement.Enabled {
-			r.Route("/firewall", func(r chi.Router) {
-				r.Group(func(r chi.Router) {
-					r.Use(middlewares.RequireCookieAuth)
-					r.Get("/aliases", ctx.HandlerFunc(handlers.GETAvailableAliases))
-					r.Get("/entries", ctx.HandlerFunc(handlers.GETUserEntries))
-					r.Post("/entries", ctx.HandlerFunc(handlers.POSTAddIPEntry))
-					r.Delete("/entries/{id}", ctx.HandlerFunc(handlers.DELETERemoveIPEntry))
-					r.Delete("/entries/{id}/blacklist", ctx.HandlerFunc(handlers.DELETEBlacklistIPEntry))
-				})
-			})
-		}
-
-		r.Get("/queries", ctx.HandlerFunc(handlers.GetQueriesGET))
-		r.Get("/data", ctx.HandlerFunc(handlers.GetMetricsGET))
 
 		r.Route("/v1", func(r chi.Router) {
 			r.Get("/health", ctx.HandlerFunc(handlers.HandlerHealth))
