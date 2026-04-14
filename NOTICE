@@ -1,4 +1,6 @@
-The following files are in use under a license different from the rest of the project (with any changes indicated):
+Copyright 2026 Brynn Crowley
+
+The following files are borrowed from an external project (with changes indicated):
 - internal/utils/strings.go
 - internal/utils/strings_test.go
 - internal/utils/time.go
@@ -6,7 +8,4 @@ The following files are in use under a license different from the rest of the pr
 - internal/utils/time_test.go
   - additional unit tests to cover Atoi errors
 
-The above code is licensed from the Authelia project  (https://github.com/authelia/authelia) which is published under the Apache 2.0 License (see APACHE-LICENSE.txt).
-
-Original Copyright: 2025 James D Elliot
-(See individual file headers for specific attributions)
+The above code is licensed from the Authelia project (https://github.com/authelia/authelia) which is published under the Apache 2.0 License.
