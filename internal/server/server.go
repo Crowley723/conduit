@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/Crowley723/conduit/internal/authentication"
 	"github.com/Crowley723/conduit/internal/config"
 	"github.com/Crowley723/conduit/internal/distributed"
@@ -11,12 +18,6 @@ import (
 	"github.com/Crowley723/conduit/internal/middlewares"
 	"github.com/Crowley723/conduit/internal/services/certificate"
 	"github.com/Crowley723/conduit/internal/storage"
-	"log/slog"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -34,9 +35,7 @@ type Server struct {
 	cancel      context.CancelFunc
 }
 
-func New(cfg *config.Config) (*Server, error) {
-	logger := setupLogger(cfg)
-
+func New(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	sessionManager, err := authentication.NewSessionManager(logger, cfg)
@@ -184,9 +183,9 @@ func (s *Server) Start() error {
 
 	go func() {
 		if s.cfg.Distributed != nil && s.cfg.Distributed.Enabled {
-			s.logger.Info("Server Started", "port", s.cfg.Server.Port, "instance", s.election.InstanceID)
+			s.logger.Info(fmt.Sprintf("Server listening for http at address %s", server.Addr), "instance", s.election.InstanceID)
 		} else {
-			s.logger.Info("Server Started", "port", s.cfg.Server.Port)
+			s.logger.Info(fmt.Sprintf("Server listening for http at address %s", server.Addr))
 		}
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.logger.Error("Server failed to start", "error", err)
@@ -209,15 +208,13 @@ func (s *Server) Start() error {
 
 	select {
 	case <-quit:
-		s.logger.Info("Shutdown signal received")
+
 	case <-s.appCtx.Done():
 		s.logger.Info("Context canceled")
 	}
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-
-	s.logger.Info("Shutting Down Server")
 
 	s.jobManager.Shutdown(shutdownCtx)
 

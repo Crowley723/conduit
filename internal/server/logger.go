@@ -2,43 +2,44 @@ package server
 
 import (
 	"context"
-	"github.com/Crowley723/conduit/internal/config"
+	"fmt"
 	"log/slog"
 	"os"
 	"runtime/debug"
+	"strings"
 )
 
-func setupLogger(cfg *config.Config) *slog.Logger {
-	var level slog.Level
-	switch cfg.Log.Level {
+func NewLogger(level, format string) (*slog.Logger, error) {
+	var slogLevel slog.Level
+
+	switch strings.ToLower(level) {
 	case "debug":
-		level = slog.LevelDebug
+		slogLevel = slog.LevelDebug
 	case "info":
-		level = slog.LevelInfo
+		slogLevel = slog.LevelInfo
 	case "warn":
-		level = slog.LevelWarn
+		slogLevel = slog.LevelWarn
 	case "error":
-		level = slog.LevelError
+		slogLevel = slog.LevelError
 	default:
-		level = slog.LevelInfo
+		return nil, fmt.Errorf("invalid log level: %s", level)
 	}
 
 	opts := &slog.HandlerOptions{
-		Level: level,
+		Level: slogLevel,
 	}
 
 	var handlers []slog.Handler
 
-	if cfg.Log.Format == "json" {
+	if format == "json" {
 		handlers = append(handlers, slog.NewJSONHandler(os.Stderr, opts))
 	} else {
 		handlers = append(handlers, slog.NewTextHandler(os.Stderr, opts))
 	}
 
 	multiHandler := NewMultiHandler(handlers...)
-	//stackHandler := NewStackTraceHandler(multiHandler)
 
-	return slog.New(multiHandler)
+	return slog.New(multiHandler), nil
 }
 
 type MultiHandler struct {
