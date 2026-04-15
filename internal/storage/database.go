@@ -6,16 +6,22 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"github.com/Crowley723/conduit/internal/config"
 	"log/slog"
+	"net"
 	"sort"
+	"strconv"
 	"strings"
+	"syscall"
+
+	"github.com/Crowley723/conduit/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 //go:embed migrations/*
 var migrationsFS embed.FS
+
+const latestMigrationVersion = 1
 
 type DatabaseProvider struct {
 	pool *pgxpool.Pool
@@ -25,14 +31,36 @@ type DatabaseProvider struct {
 func NewStorageProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
 	pPool, err := pgxpool.New(ctx, GetConnectionStringFromConfig(cfg))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, simplifyDatabaseError(err)
 	}
 
 	if err := pPool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		return nil, simplifyDatabaseError(err)
 	}
 
 	return &DatabaseProvider{pool: pPool, cfg: cfg}, nil
+}
+
+func simplifyDatabaseError(err error) error {
+	if netErr, ok := errors.AsType[*net.OpError](err); ok {
+		if netErr.Op == "dial" {
+			if errors.Is(netErr.Err, syscall.ECONNREFUSED) {
+				return fmt.Errorf("failed to connect to %s: connection refused", netErr.Addr)
+			}
+		}
+		return fmt.Errorf("failed to connect to %s: %v", netErr.Addr, netErr.Err)
+	}
+
+	// For other errors, try to extract just the essential message
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "dial error:") {
+		parts := strings.Split(errMsg, "dial error: ")
+		if len(parts) > 1 {
+			return fmt.Errorf("failed to connect to database: %s", parts[len(parts)-1])
+		}
+	}
+
+	return fmt.Errorf("failed to connect to database: %w", err)
 }
 
 func (p *DatabaseProvider) GetPool() *pgxpool.Pool {
@@ -49,7 +77,27 @@ func (p *DatabaseProvider) Ping(ctx context.Context) error {
 	return p.pool.Ping(ctx)
 }
 
+func (p *DatabaseProvider) GetCurrentMigrationVersion(ctx context.Context) (int, error) {
+	conn, err := p.pool.Acquire(ctx)
+	if err != nil {
+		return -1, fmt.Errorf("failed to acquire connection: %w", err)
+	}
+	defer conn.Release()
+
+	var version int
+	err = conn.QueryRow(ctx, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations").Scan(&version)
+	if err != nil {
+		return -1, fmt.Errorf("failed to get current migration version: %w", err)
+	}
+
+	return version, nil
+}
+
 func (p *DatabaseProvider) RunMigrations(ctx context.Context) error {
+	return p.RunUpMigrations(ctx, latestMigrationVersion)
+}
+
+func (p *DatabaseProvider) RunUpMigrations(ctx context.Context, targetVersion int) error {
 	conn, err := p.pool.Acquire(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to acquire connection: %w", err)
@@ -58,12 +106,21 @@ func (p *DatabaseProvider) RunMigrations(ctx context.Context) error {
 
 	_, err = conn.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
-		    version VARCHAR(255) PRIMARY KEY,
+		    version INTEGER PRIMARY KEY,
 		    applied_at TIMESTAMP NOT NULL DEFAULT NOW()
 		    )
 		`)
 	if err != nil {
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
+	}
+
+	currentVersion, err := p.GetCurrentMigrationVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get current migration version: %w", err)
+	}
+
+	if targetVersion <= currentVersion {
+		return fmt.Errorf("target version %d is not ahead of current version %d", targetVersion, currentVersion)
 	}
 
 	entries, err := migrationsFS.ReadDir("migrations")
@@ -81,17 +138,17 @@ func (p *DatabaseProvider) RunMigrations(ctx context.Context) error {
 	sort.Strings(migrations)
 
 	for _, filename := range migrations {
-		version := strings.Split(filename, "_")[0]
-
-		var exists bool
-		err = conn.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version = $1)", version).Scan(&exists)
-
+		version, err := strconv.Atoi(strings.Split(filename, "_")[0])
 		if err != nil {
-			return fmt.Errorf("failed to check migration status for %s: %w", version, err)
+			return fmt.Errorf("failed to parse migration version from %s: %w", filename, err)
 		}
 
-		if exists {
+		if version <= currentVersion {
 			continue
+		}
+
+		if version > targetVersion {
+			break
 		}
 
 		content, err := migrationsFS.ReadFile("migrations/" + filename)
@@ -118,7 +175,81 @@ func (p *DatabaseProvider) RunMigrations(ctx context.Context) error {
 
 		err = tx.Commit(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to commit migration %s: %w", version, err)
+			return fmt.Errorf("failed to commit migration %d: %w", version, err)
+		}
+	}
+
+	return nil
+}
+
+func (p *DatabaseProvider) RunDownMigrations(ctx context.Context, targetVersion int) error {
+	conn, err := p.pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire connection: %w", err)
+	}
+	defer conn.Release()
+
+	currentVersion, err := p.GetCurrentMigrationVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get current migration version: %w", err)
+	}
+
+	if targetVersion >= currentVersion {
+		return fmt.Errorf("target version %d is not below current version %d", targetVersion, currentVersion)
+	}
+
+	entries, err := migrationsFS.ReadDir("migrations")
+	if err != nil {
+		return fmt.Errorf("failed to read migrations directory: %w", err)
+	}
+
+	var migrations []string
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".down.sql") {
+			migrations = append(migrations, entry.Name())
+		}
+	}
+
+	sort.Sort(sort.Reverse(sort.StringSlice(migrations)))
+
+	for _, filename := range migrations {
+		version, err := strconv.Atoi(strings.Split(filename, "_")[0])
+		if err != nil {
+			return fmt.Errorf("failed to parse migration version from %s: %w", filename, err)
+		}
+
+		if version > currentVersion {
+			continue
+		}
+
+		if version <= targetVersion {
+			break
+		}
+
+		content, err := migrationsFS.ReadFile("migrations/" + filename)
+		if err != nil {
+			return fmt.Errorf("failed to read migration file %s: %w", filename, err)
+		}
+
+		tx, err := conn.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to begin transaction for %s: %w", filename, err)
+		}
+
+		_, err = tx.Exec(ctx, string(content))
+		if err != nil {
+			_ = tx.Rollback(ctx)
+			return fmt.Errorf("failed to execute migration %s: %w", filename, err)
+		}
+
+		_, err = tx.Exec(ctx, "DELETE FROM schema_migrations WHERE version = $1", version)
+		if err != nil {
+			_ = tx.Rollback(ctx)
+			return fmt.Errorf("failed to remove migration record %s: %w", filename, err)
+		}
+
+		if err = tx.Commit(ctx); err != nil {
+			return fmt.Errorf("failed to commit migration %s: %w", filename, err)
 		}
 	}
 
@@ -139,20 +270,22 @@ func (p *DatabaseProvider) EnsureSystemUser(ctx context.Context, logger *slog.Lo
 
 	systemSub := "system"
 
-	if errors.Is(err, sql.ErrNoRows) {
-		_, err = tx.Exec(ctx, `
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			_, err = tx.Exec(ctx, `
 			INSERT INTO users (iss, sub, username, display_name, email, is_system, created_at)
 			VALUES ($1, $2, $3, $4, $5, TRUE, NOW())
 		`, p.cfg.Server.ExternalURL, systemSub, SystemUsername, SystemDisplayName, SystemEmail)
 
-		if err != nil {
-			return fmt.Errorf("failed to create system user: %w", err)
+			if err != nil {
+				return fmt.Errorf("failed to create system user: %w", err)
+			}
+
+			logger.Info("created system user", "iss", p.cfg.Server.ExternalURL, "sub", systemSub)
+
+		} else {
+			return fmt.Errorf("failed to check for system user: %w", err)
 		}
-
-		logger.Info("created system user", "iss", p.cfg.Server.ExternalURL, "sub", systemSub)
-
-	} else if err != nil {
-		return fmt.Errorf("failed to check for system user: %w", err)
 	} else {
 		if existingIss != p.cfg.Server.ExternalURL {
 			logger.Warn("external URL changed, updating system user",
@@ -160,7 +293,6 @@ func (p *DatabaseProvider) EnsureSystemUser(ctx context.Context, logger *slog.Lo
 				"new_iss", p.cfg.Server.ExternalURL,
 			)
 
-			// Update the system user's iss
 			_, err = tx.Exec(ctx, `
 				UPDATE users 
 				SET iss = $1, username = $2, display_name = $3, email = $4
@@ -181,7 +313,6 @@ func (p *DatabaseProvider) EnsureSystemUser(ctx context.Context, logger *slog.Lo
 				return fmt.Errorf("failed to update certificate_requests: %w", err)
 			}
 
-			// Update all references in certificate_events (requester)
 			_, err = tx.Exec(ctx, `
 				UPDATE certificate_events 
 				SET requester_iss = $1 
@@ -192,7 +323,6 @@ func (p *DatabaseProvider) EnsureSystemUser(ctx context.Context, logger *slog.Lo
 				return fmt.Errorf("failed to update certificate_events requester: %w", err)
 			}
 
-			// Update all references in certificate_events (reviewer)
 			_, err = tx.Exec(ctx, `
 				UPDATE certificate_events 
 				SET reviewer_iss = $1 

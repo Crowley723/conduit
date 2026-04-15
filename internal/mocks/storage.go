@@ -454,6 +454,20 @@ func (mr *MockStorageProviderMockRecorder) Ping(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStorageProvider)(nil).Ping), ctx)
 }
 
+// RunDownMigrations mocks base method.
+func (m *MockStorageProvider) RunDownMigrations(ctx context.Context, targetVersion int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunDownMigrations", ctx, targetVersion)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RunDownMigrations indicates an expected call of RunDownMigrations.
+func (mr *MockStorageProviderMockRecorder) RunDownMigrations(ctx, targetVersion any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunDownMigrations", reflect.TypeOf((*MockStorageProvider)(nil).RunDownMigrations), ctx, targetVersion)
+}
+
 // RunMigrations mocks base method.
 func (m *MockStorageProvider) RunMigrations(ctx context.Context) error {
 	m.ctrl.T.Helper()
@@ -466,6 +480,20 @@ func (m *MockStorageProvider) RunMigrations(ctx context.Context) error {
 func (mr *MockStorageProviderMockRecorder) RunMigrations(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunMigrations", reflect.TypeOf((*MockStorageProvider)(nil).RunMigrations), ctx)
+}
+
+// RunUpMigrations mocks base method.
+func (m *MockStorageProvider) RunUpMigrations(ctx context.Context, targetVersion int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunUpMigrations", ctx, targetVersion)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RunUpMigrations indicates an expected call of RunUpMigrations.
+func (mr *MockStorageProviderMockRecorder) RunUpMigrations(ctx, targetVersion any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunUpMigrations", reflect.TypeOf((*MockStorageProvider)(nil).RunUpMigrations), ctx, targetVersion)
 }
 
 // UnpauseServiceAccount mocks base method.

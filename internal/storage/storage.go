@@ -18,6 +18,8 @@ type Provider interface {
 	Close()
 	Ping(ctx context.Context) error
 	RunMigrations(ctx context.Context) error
+	RunUpMigrations(ctx context.Context, targetVersion int) error
+	RunDownMigrations(ctx context.Context, targetVersion int) error
 
 	EnsureSystemUser(ctx context.Context, logger *slog.Logger) error
 	GetSystemUser(ctx context.Context) (iss, sub string, err error)
