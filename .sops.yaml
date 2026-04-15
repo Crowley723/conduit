@@ -1,4 +1,0 @@
-creation_rules:
-  - filename_regex: \.enc\.yaml$
-    pgp: "82843FCE433398251FB23638568D8A5C3E0BA1C4"
-    encrypted_regex: "^(data|stringData)$"
