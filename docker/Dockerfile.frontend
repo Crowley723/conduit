@@ -1,0 +1,15 @@
+FROM node:25-alpine
+
+RUN npm install -g pnpm
+
+WORKDIR /app/web
+
+COPY web/package.json web/pnpm-lock.yaml ./
+
+RUN pnpm install
+
+COPY web/ ./
+
+EXPOSE 5173
+
+CMD ["pnpm", "run", "dev", "--host", "0.0.0.0"]

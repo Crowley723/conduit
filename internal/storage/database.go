@@ -107,7 +107,7 @@ func (p *DatabaseProvider) RunUpMigrations(ctx context.Context, targetVersion in
 
 	_, err = conn.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
-		    version VARCHAR(255) PRIMARY KEY,
+		    version INTEGER PRIMARY KEY,
 		    applied_at TIMESTAMP NOT NULL DEFAULT NOW()
 		    )
 		`)

@@ -1,89 +1,70 @@
 FROM node:25-alpine@sha256:cf38e1f3c28ac9d81cdc0c51d8220320b3b618780e44ef96a39f76f7dbfef023
 
-# Install pnpm and Go
 RUN npm install -g pnpm
 
-# Install other tools (excluding go from apk as we'll install a newer version)
 RUN apk add --no-cache git make netcat-openbsd wget
 
-# Install Go 1.23.4 manually (1.25 not yet released)
 RUN wget https://go.dev/dl/go1.25.1.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.25.1.linux-amd64.tar.gz && \
     rm go1.25.1.linux-amd64.tar.gz
 
-# Set Go environment
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
 
-# CreateUser app directory
 WORKDIR /app
 
-# Install reflex for Go hot reloading
 RUN go install github.com/cespare/reflex@latest
 
-# Install delve for debugging
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
-# Copy package files first for better caching
 COPY web/package.json web/pnpm-lock.yaml ./web/
 COPY go.mod go.sum ./
 
-# Install dependencies
 RUN cd web && pnpm install
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# CreateUser startup script in /usr/local/bin to avoid volume mount conflicts
 RUN cat > /usr/local/bin/start-dev.sh << 'EOF'
 #!/bin/sh
 set -e
 
 echo "Starting development environment..."
 
-# Start Redis connection check
 echo "Waiting for Redis..."
 while ! nc -z redis 6379; do
   sleep 0.1
 done
 echo "Redis is ready!"
 
-# Start frontend in background
 echo "Starting frontend..."
 cd /app/web && pnpm run dev --host 0.0.0.0 &
 
-# Start backend with hot reload
 echo "Starting backend with hot reload..."
-cd /app && reflex -r '\.go$' -s -- go run ./main.go -c config.docker.yaml &
+cd /app && reflex -r '\.go$' -s -- go run ./cmd/conduit/main.go -c config.container.yaml &
 
-# Wait for all background processes
 wait
 EOF
 
 RUN chmod +x /usr/local/bin/start-dev.sh
 
-# CreateUser debug startup script
 RUN cat > /usr/local/bin/start-debug.sh << 'EOF'
 #!/bin/sh
 set -e
 
 echo "Starting development environment with debugger..."
 
-# Start Redis connection check
 echo "Waiting for Redis..."
 while ! nc -z redis 6379; do
   sleep 0.1
 done
 echo "Redis is ready!"
 
-# Start frontend in background
 echo "Starting frontend..."
 cd /app/web && pnpm run dev --host 0.0.0.0 &
 
-# Start backend with debugger
 echo "Starting backend with debugger on port 2345..."
-cd /app && reflex -r '\.go$' -s -- dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient ./main.go -- -c config.docker.yaml &
+cd /app && reflex -r '\.go$' -s -- dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient ./cmd/conduit/main.go -- -c config.container.yaml &
 
 # Wait for all background processes
 wait
@@ -91,8 +72,6 @@ EOF
 
 RUN chmod +x /usr/local/bin/start-debug.sh
 
-# Expose ports for backend, frontend, and debugger
 EXPOSE 8080 5173 2345
 
-# Default command
 CMD ["/app/start-dev.sh"]

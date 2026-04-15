@@ -33,6 +33,7 @@ func main() {
 	}
 
 	if err := ctx.Run(&CLI.Globals); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }

@@ -1,0 +1,57 @@
+services:
+  redis:
+    command: 'redis-server --save 60 1 --loglevel warning'
+    image: redis:latest
+    ports:
+      - "127.0.0.1:6379:6379"
+    container_name: conduit-dev-redis
+
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    shm_size: 128mb
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: conduit
+    container_name: conduit-dev-postgres
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"
+    container_name: conduit-dev-adminer
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: conduit-dev-backend
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:2345:2345"
+    environment:
+      TZ: America/Los_Angeles
+      GO_ENV: development
+    volumes:
+      - ..:/app
+    depends_on:
+      - redis
+      - postgres
+    working_dir: /app
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: conduit-dev-frontend
+    ports:
+      - "127.0.0.1:5173:5173"
+    environment:
+      TZ: America/Los_Angeles
+    volumes:
+      - ../web:/app/web
+      - /app/web/node_modules
+    working_dir: /app/web
