@@ -14,7 +14,8 @@ var CLI struct {
 
 	Version bool `short:"v" help:"Print version information"`
 
-	Serve commands.ServeCommand `cmd:"" default:"1" help:"Run conduit server"`
+	Serve   commands.ServeCommand   `cmd:"" default:"1" help:"Run conduit server"`
+	Migrate commands.MigrateCommand `cmd:"" help:"Database migration commands"`
 }
 
 func main() {
@@ -32,6 +33,6 @@ func main() {
 	}
 
 	if err := ctx.Run(&CLI.Globals); err != nil {
-		ctx.FatalIfErrorf(err)
+		os.Exit(1)
 	}
 }
