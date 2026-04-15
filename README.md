@@ -2,6 +2,11 @@
 
 A web-based mTLS certificate management dashboard. Conduit provides a self-hosted interface for requesting, issuing, and downloading client certificates backed by Kubernetes cert-manager, with OIDC authentication and full audit logging.
 
+## Work in Progress
+This application was born out of my desire to have an easy way to manage and provision mTLS certificates in my homelab (without manually creating certificate CRDs against cert-manager and running openssl commands to convert the data to a p12 file for import into a browser). I decided that I could better build the application if it was separate from the rest of my personal projects and might be useful to others.
+
+As such, I am still in the process of trimming the fat of my other features and re-working it to be more focused and easy to use.
+
 ## Purpose
 
 Conduit is designed for teams and individuals who need a simple, secure way to manage mTLS client certificates without direct cluster access:
