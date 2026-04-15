@@ -42,8 +42,7 @@ func NewStorageProvider(ctx context.Context, cfg *config.Config) (Provider, erro
 }
 
 func simplifyDatabaseError(err error) error {
-	var netErr *net.OpError
-	if errors.As(err, &netErr) {
+	if netErr, ok := errors.AsType[*net.OpError](err); ok {
 		if netErr.Op == "dial" {
 			if errors.Is(netErr.Err, syscall.ECONNREFUSED) {
 				return fmt.Errorf("failed to connect to %s: connection refused", netErr.Addr)
@@ -176,7 +175,7 @@ func (p *DatabaseProvider) RunUpMigrations(ctx context.Context, targetVersion in
 
 		err = tx.Commit(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to commit migration %s: %w", version, err)
+			return fmt.Errorf("failed to commit migration %d: %w", version, err)
 		}
 	}
 

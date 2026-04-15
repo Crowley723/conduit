@@ -74,7 +74,7 @@ func (c *DownCommand) Run() error {
 type StatusCommand struct{}
 
 func (c *StatusCommand) Run() error {
-	fmt.Println("Development Environment Status:\n")
+	fmt.Println("Development Environment Status:")
 
 	infraStatuses, err := ComposeStatus(ComposeFileInfra)
 	if err != nil {
