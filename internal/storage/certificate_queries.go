@@ -180,14 +180,12 @@ func (p *DatabaseProvider) GetCertificateRequests(ctx context.Context) ([]*model
 		return requests, nil
 	}
 
-	// Fetch all events for all requests in one query
 	eventRows, err := p.pool.Query(ctx, eventsQuery, requestIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get events for certificate requests: %w", err)
 	}
 	defer eventRows.Close()
 
-	// CreateUser a map for quick lookup
 	requestMap := make(map[int]*models.CertificateRequest)
 	for _, req := range requests {
 		requestMap[req.ID] = req
@@ -299,14 +297,12 @@ func (p *DatabaseProvider) GetCertificateRequestsByUser(ctx context.Context, sub
 		return requests, nil
 	}
 
-	// Fetch all events for all requests in one query
 	eventRows, err := p.pool.Query(ctx, eventsQuery, requestIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get events for certificate requests: %w", err)
 	}
 	defer eventRows.Close()
 
-	// CreateUser a map for quick lookup
 	requestMap := make(map[int]*models.CertificateRequest)
 	for _, req := range requests {
 		requestMap[req.ID] = req
@@ -345,11 +341,9 @@ func (p *DatabaseProvider) GetCertificateRequestsByUser(ctx context.Context, sub
 }
 
 func (p *DatabaseProvider) GetCertificateRequestsPaginated(ctx context.Context, params models.PaginationParams) (*models.PaginatedCertResult, error) {
-	// Set default limit if not provided
 	if params.Limit <= 0 {
 		params.Limit = 20
 	}
-	// Cap maximum limit to prevent abuse
 	if params.Limit > 100 {
 		params.Limit = 100
 	}
@@ -357,14 +351,12 @@ func (p *DatabaseProvider) GetCertificateRequestsPaginated(ctx context.Context, 
 		params.Offset = 0
 	}
 
-	// Get total count
 	countQuery := `SELECT COUNT(*) FROM certificate_requests`
 	var total int
 	if err := p.pool.QueryRow(ctx, countQuery).Scan(&total); err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 
-	// Get paginated requests
 	query := `
        SELECT id, owner_iss, owner_sub, message, common_name, dns_names, organizational_units, validity_days, status, requested_at, certificate_identifier, provider_metadata, issued_at, expires_at, serial_number, certificate_pem
        FROM certificate_requests
@@ -424,7 +416,6 @@ func (p *DatabaseProvider) GetCertificateRequestsPaginated(ctx context.Context, 
 		return result, nil
 	}
 
-	// Fetch all events for the paginated requests
 	eventsQuery := `
        SELECT id, certificate_request_id, requester_iss, requester_sub, reviewer_iss, reviewer_sub, new_status, review_notes, created_at
        FROM certificate_events
@@ -438,7 +429,6 @@ func (p *DatabaseProvider) GetCertificateRequestsPaginated(ctx context.Context, 
 	}
 	defer eventRows.Close()
 
-	// CreateUser a map for quick lookup
 	requestMap := make(map[int]*models.CertificateRequest)
 	for _, req := range requests {
 		requestMap[req.ID] = req
@@ -642,7 +632,6 @@ func (p *DatabaseProvider) UpdateCertificateRequestIssued(ctx context.Context, r
 	}
 	defer tx.Rollback(ctx)
 
-	// Get request owner for the event
 	getRequestQuery := `
 		SELECT owner_iss, owner_sub
 		FROM certificate_requests
@@ -655,7 +644,6 @@ func (p *DatabaseProvider) UpdateCertificateRequestIssued(ctx context.Context, r
 		return fmt.Errorf("failed to get request owner: %w", err)
 	}
 
-	// Update the request with certificate details
 	updateQuery := `
 		UPDATE certificate_requests
 		SET status = $1,

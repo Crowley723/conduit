@@ -22,7 +22,7 @@ import (
 //go:embed migrations/*
 var migrationsFS embed.FS
 
-const latestMigrationVersion = 4
+const latestMigrationVersion = 1
 const EncryptionValidationCheckValue = "conduit-encryption-validation-v1"
 
 type DatabaseProvider struct {

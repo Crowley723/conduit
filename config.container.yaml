@@ -21,7 +21,7 @@ cors:
   maxAge: 300
 
 session:
-  store: 'local'
+  store: 'memory'
   duration_source: 'fixed'
   secure: false
 

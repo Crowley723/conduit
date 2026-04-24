@@ -15,4 +15,4 @@ COPY . .
 
 EXPOSE 8080 2345
 
-CMD ["sh", "-c", "reflex -r '\\.go$' -s -- go run ./cmd/conduit/main.go -c config.container.yaml"]
+CMD ["sh", "-c", "reflex -r '\\.go$' -s -- dlv debug ./cmd/conduit/main.go --headless --listen=:2345 --api-version=2 --accept-multiclient --continue -- -c config.container.yaml"]

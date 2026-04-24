@@ -210,20 +210,12 @@ func GETCertificateDownload(ctx *middlewares.AppContext) {
 		return
 	}
 
-	ctx.Logger.Info("retrieved certificate data",
-		"identifier", *request.CertificateIdentifier,
-		"certPEMLen", len(certPEM),
-		"keyPEMLen", len(keyPEM),
-		"caPEMLen", len(caPEM))
-
 	p12Bytes, err := GenerateP12(certPEM, keyPEM, caPEM, downloadToken.Passphrase)
 	if err != nil {
 		ctx.Logger.Error("failed to generate P12", "error", err)
 		ctx.SetJSONError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 		return
 	}
-
-	ctx.Logger.Info("generated P12 file", "p12Size", len(p12Bytes), "certificateId", certificateId)
 
 	filename := fmt.Sprintf("certificate-%d.p12", certificateId)
 	ctx.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))

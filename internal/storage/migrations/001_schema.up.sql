@@ -132,13 +132,56 @@ CREATE INDEX idx_cert_events_request_id ON certificate_events(certificate_reques
 CREATE INDEX idx_cert_events_requester  ON certificate_events(requester_iss, requester_sub);
 CREATE INDEX idx_cert_events_reviewer   ON certificate_events(reviewer_iss, reviewer_sub);
 
+CREATE TABLE certificate_authority (
+    id SERIAL PRIMARY KEY,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    cert_pem BYTEA NOT NULL,
+    key_pem BYTEA NOT NULL,
+    ca_pem BYTEA NOT NULL,
+
+    common_name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    locality TEXT,
+    province TEXT,
+
+    serial_number TEXT NOT NULL,
+    key_algorithm TEXT NOT NULL,
+
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    UNIQUE (is_active)
+);
+
 CREATE TABLE issued_certificates (
     identifier TEXT PRIMARY KEY,
-    cert_pem   TEXT      NOT NULL,
-    key_pem    TEXT      NOT NULL,
-    ca_pem     TEXT      NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    cert_pem BYTEA NOT NULL,
+    key_pem BYTEA,
+    ca_pem BYTEA NOT NULL,
+
+    common_name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    locality TEXT,
+    province TEXT,
+
+    dns_names TEXT[] DEFAULT '{}',
+    organizational_units TEXT[] DEFAULT '{}',
+    serial_number TEXT NOT NULL,
+    key_algorithm TEXT NOT NULL,
+
+    certificate_request_id INTEGER NOT NULL,
+
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP,
+
+    FOREIGN KEY (certificate_request_id) REFERENCES certificate_requests(id) ON DELETE RESTRICT
 );
+
+CREATE INDEX idx_issued_certs_request_id ON issued_certificates(certificate_request_id);
+CREATE INDEX idx_issued_certs_expires_at ON issued_certificates(expires_at);
 
 CREATE TABLE certificate_download_tokens (
     token_hash             TEXT PRIMARY KEY,
@@ -154,3 +197,10 @@ CREATE TABLE certificate_download_tokens (
 );
 
 CREATE INDEX idx_download_tokens_expires ON certificate_download_tokens(expires_at);
+
+CREATE TABLE encryption (
+    id SERIAL PRIMARY KEY,
+    validation_data BYTEA NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

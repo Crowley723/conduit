@@ -1,5 +1,7 @@
+DROP TABLE IF EXISTS encryption CASCADE;
 DROP TABLE IF EXISTS certificate_download_tokens CASCADE;
 DROP TABLE IF EXISTS issued_certificates CASCADE;
+DROP TABLE IF EXISTS certificate_authority CASCADE;
 DROP TABLE IF EXISTS certificate_events CASCADE;
 DROP TABLE IF EXISTS certificate_downloads CASCADE;
 DROP TABLE IF EXISTS certificate_requests CASCADE;
