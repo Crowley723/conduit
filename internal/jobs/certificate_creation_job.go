@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/Crowley723/conduit/internal/middlewares"
 	"github.com/Crowley723/conduit/internal/models"
 	"github.com/Crowley723/conduit/internal/services/certificate"
-	"strings"
-	"time"
 )
 
 type CertificateCreationJob struct {
@@ -98,7 +99,6 @@ func handleApprovedCertificates(ctx *middlewares.AppContext, certs []*models.Cer
 			continue
 		}
 
-		// Mark it as pending
 		err = ctx.Storage.UpdateCertificateRequestStatus(
 			ctx,
 			cert.ID,

@@ -7,6 +7,8 @@ This application was born out of my desire to have an easy way to manage and pro
 
 As such, I am still in the process of trimming the fat of my other features and re-working it to be more focused and easy to use.
 
+Progress can be tracked on the [Conduit v1.0](https://github.com/users/Crowley723/projects/2) project
+
 ## Purpose
 
 Conduit is designed for teams and individuals who need a simple, secure way to manage mTLS client certificates without direct cluster access:
@@ -39,30 +41,3 @@ Conduit is designed for teams and individuals who need a simple, secure way to m
 - cert-manager integration (Kubernetes)
 - Audit log for all certificate operations
 - Docker and Helm deployment ready
-
-## Development
-
-```bash
-# Install dependencies
-make install
-
-# Run full stack (backend + frontend)
-make dev
-
-# Run tests
-make test
-
-# Docker Compose
-make dev-docker
-```
-
-## Deployment
-
-The application is containerized and includes Helm charts for Kubernetes deployment.
-
-## TODO
-
-- [ ] **CLI tool**
-  - [ ] Cleanup expired download tokens
-  - [ ] Cleanup expired certificates
-  - [ ] Cleanup old certificate download logs

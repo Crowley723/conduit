@@ -1,15 +1,9 @@
 import { Button } from './ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card.tsx';
+import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
-import { cn } from '@/lib/utils.ts';
+import { cn } from '@/services/Utils';
 import React from 'react';
 
 interface RequestCertificateFormProps {
@@ -64,12 +58,6 @@ export function RequestCertificateForm({
   return (
     <div className={cn('flex flex-col gap-6', className)}>
       <Card>
-        <CardHeader>
-          <CardTitle>Request Client Certificate</CardTitle>
-          <CardDescription>
-            Request a new mTLS client certificate for secure authentication
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {errorMessage && (
@@ -85,7 +73,7 @@ export function RequestCertificateForm({
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="message">
-                Message
+                Reason
                 <span className="text-destructive ml-1">*</span>
               </Label>
               <Textarea
@@ -126,9 +114,6 @@ export function RequestCertificateForm({
                   {errors.validity_days}
                 </span>
               )}
-              <span className="text-muted-foreground text-xs">
-                How many days the certificate should remain valid (default: 90)
-              </span>
             </div>
 
             <div className="flex flex-col gap-2 pt-2">

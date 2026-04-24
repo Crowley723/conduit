@@ -1,33 +1,13 @@
-import { redirect } from '@tanstack/react-router';
-import { authApi } from '@/api/auth';
+import { GetLoginStatus } from '@/services/Auth';
 
 export async function requireAuth(
-  location: { pathname: string },
-  customMessage?: string,
-  isError?: boolean
+  _location?: { pathname: string },
+  _customMessage?: string,
+  _isError?: boolean
 ) {
-  try {
-    const authResponse = await authApi.getCurrentUser();
-    if (!authResponse?.authenticated) {
-      throw redirect({
-        to: '/',
-        search: {
-          showLogin: true,
-          message: customMessage || 'You must login to access that page',
-          rd: location.pathname,
-          error: isError || false,
-        },
-      });
-    }
-  } catch (error) {
-    throw redirect({
-      to: '/',
-      search: {
-        showLogin: true,
-        message: customMessage || 'You must login to access that page',
-        rd: location.pathname,
-        error: true,
-      },
-    });
-  }
+  // Auth guard and redirect are handled by the /__requires_login layout.
+  // This function is kept for compatibility but is effectively a no-op
+  // since the layout's beforeLoad runs first.
+  const response = await GetLoginStatus();
+  return response;
 }

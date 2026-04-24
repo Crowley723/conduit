@@ -9,358 +9,302 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ErrorRouteImport } from './routes/error'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as SettingsRouteRouteImport } from './routes/settings/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsIndexRouteImport } from './routes/settings/index'
-import { Route as BlogIndexRouteImport } from './routes/blog/index'
-import { Route as SettingsServiceAccountsRouteImport } from './routes/settings/service-accounts'
-import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
-import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
-import { Route as SettingsFirewallIndexRouteImport } from './routes/settings/firewall/index'
-import { Route as SettingsCertsIndexRouteImport } from './routes/settings/certs/index'
-import { Route as SettingsCertsSettingsRouteImport } from './routes/settings/certs/settings'
-import { Route as SettingsCertsRequestsRouteImport } from './routes/settings/certs/requests'
-import { Route as SettingsFirewallAdminIndexRouteImport } from './routes/settings/firewall/admin/index'
-import { Route as SettingsCertsAdminRequestsRouteImport } from './routes/settings/certs/admin/requests'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as _requires_loginRouteImport } from './routes/__requires_login'
+import { Route as _requires_loginIndexRouteImport } from './routes/__requires_login/index'
+import { Route as _requires_loginUserServiceAccountsRouteImport } from './routes/__requires_login/user/service-accounts'
+import { Route as _requires_loginUserRequestCertificateRouteImport } from './routes/__requires_login/user/request-certificate'
+import { Route as _requires_loginUserProfileRouteImport } from './routes/__requires_login/user/profile'
+import { Route as _requires_loginUserMyCertificatesRouteImport } from './routes/__requires_login/user/my-certificates'
+import { Route as _requires_loginUserActivityRouteImport } from './routes/__requires_login/user/activity'
+import { Route as _requires_loginAdminUsersRouteImport } from './routes/__requires_login/admin/users'
+import { Route as _requires_loginAdminReviewQueueRouteImport } from './routes/__requires_login/admin/review-queue'
+import { Route as _requires_loginAdminCertificatesRouteImport } from './routes/__requires_login/admin/certificates'
+import { Route as _requires_loginAdminAuditLogRouteImport } from './routes/__requires_login/admin/audit-log'
 
-const ErrorRoute = ErrorRouteImport.update({
-  id: '/error',
-  path: '/error',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const _requires_loginRoute = _requires_loginRouteImport.update({
+  id: '/__requires_login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRouteRoute = SettingsRouteRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
+const _requires_loginIndexRoute = _requires_loginIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => _requires_loginRoute,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const BlogIndexRoute = BlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsServiceAccountsRoute = SettingsServiceAccountsRouteImport.update({
-  id: '/service-accounts',
-  path: '/service-accounts',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsProfileRoute = SettingsProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/blog/$slug',
-  path: '/blog/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsFirewallIndexRoute = SettingsFirewallIndexRouteImport.update({
-  id: '/firewall/',
-  path: '/firewall/',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsCertsIndexRoute = SettingsCertsIndexRouteImport.update({
-  id: '/certs/',
-  path: '/certs/',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsCertsSettingsRoute = SettingsCertsSettingsRouteImport.update({
-  id: '/certs/settings',
-  path: '/certs/settings',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsCertsRequestsRoute = SettingsCertsRequestsRouteImport.update({
-  id: '/certs/requests',
-  path: '/certs/requests',
-  getParentRoute: () => SettingsRouteRoute,
-} as any)
-const SettingsFirewallAdminIndexRoute =
-  SettingsFirewallAdminIndexRouteImport.update({
-    id: '/firewall/admin/',
-    path: '/firewall/admin/',
-    getParentRoute: () => SettingsRouteRoute,
+const _requires_loginUserServiceAccountsRoute =
+  _requires_loginUserServiceAccountsRouteImport.update({
+    id: '/user/service-accounts',
+    path: '/user/service-accounts',
+    getParentRoute: () => _requires_loginRoute,
   } as any)
-const SettingsCertsAdminRequestsRoute =
-  SettingsCertsAdminRequestsRouteImport.update({
-    id: '/certs/admin/requests',
-    path: '/certs/admin/requests',
-    getParentRoute: () => SettingsRouteRoute,
+const _requires_loginUserRequestCertificateRoute =
+  _requires_loginUserRequestCertificateRouteImport.update({
+    id: '/user/request-certificate',
+    path: '/user/request-certificate',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginUserProfileRoute =
+  _requires_loginUserProfileRouteImport.update({
+    id: '/user/profile',
+    path: '/user/profile',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginUserMyCertificatesRoute =
+  _requires_loginUserMyCertificatesRouteImport.update({
+    id: '/user/my-certificates',
+    path: '/user/my-certificates',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginUserActivityRoute =
+  _requires_loginUserActivityRouteImport.update({
+    id: '/user/activity',
+    path: '/user/activity',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginAdminUsersRoute =
+  _requires_loginAdminUsersRouteImport.update({
+    id: '/admin/users',
+    path: '/admin/users',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginAdminReviewQueueRoute =
+  _requires_loginAdminReviewQueueRouteImport.update({
+    id: '/admin/review-queue',
+    path: '/admin/review-queue',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginAdminCertificatesRoute =
+  _requires_loginAdminCertificatesRouteImport.update({
+    id: '/admin/certificates',
+    path: '/admin/certificates',
+    getParentRoute: () => _requires_loginRoute,
+  } as any)
+const _requires_loginAdminAuditLogRoute =
+  _requires_loginAdminAuditLogRouteImport.update({
+    id: '/admin/audit-log',
+    path: '/admin/audit-log',
+    getParentRoute: () => _requires_loginRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRouteWithChildren
-  '/about': typeof AboutRoute
-  '/error': typeof ErrorRoute
-  '/blog/$slug': typeof BlogSlugRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/settings/service-accounts': typeof SettingsServiceAccountsRoute
-  '/blog/': typeof BlogIndexRoute
-  '/settings/': typeof SettingsIndexRoute
-  '/settings/certs/requests': typeof SettingsCertsRequestsRoute
-  '/settings/certs/settings': typeof SettingsCertsSettingsRoute
-  '/settings/certs/': typeof SettingsCertsIndexRoute
-  '/settings/firewall/': typeof SettingsFirewallIndexRoute
-  '/settings/certs/admin/requests': typeof SettingsCertsAdminRequestsRoute
-  '/settings/firewall/admin/': typeof SettingsFirewallAdminIndexRoute
+  '/': typeof _requires_loginIndexRoute
+  '/login': typeof LoginRoute
+  '/admin/audit-log': typeof _requires_loginAdminAuditLogRoute
+  '/admin/certificates': typeof _requires_loginAdminCertificatesRoute
+  '/admin/review-queue': typeof _requires_loginAdminReviewQueueRoute
+  '/admin/users': typeof _requires_loginAdminUsersRoute
+  '/user/activity': typeof _requires_loginUserActivityRoute
+  '/user/my-certificates': typeof _requires_loginUserMyCertificatesRoute
+  '/user/profile': typeof _requires_loginUserProfileRoute
+  '/user/request-certificate': typeof _requires_loginUserRequestCertificateRoute
+  '/user/service-accounts': typeof _requires_loginUserServiceAccountsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/error': typeof ErrorRoute
-  '/blog/$slug': typeof BlogSlugRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/settings/service-accounts': typeof SettingsServiceAccountsRoute
-  '/blog': typeof BlogIndexRoute
-  '/settings': typeof SettingsIndexRoute
-  '/settings/certs/requests': typeof SettingsCertsRequestsRoute
-  '/settings/certs/settings': typeof SettingsCertsSettingsRoute
-  '/settings/certs': typeof SettingsCertsIndexRoute
-  '/settings/firewall': typeof SettingsFirewallIndexRoute
-  '/settings/certs/admin/requests': typeof SettingsCertsAdminRequestsRoute
-  '/settings/firewall/admin': typeof SettingsFirewallAdminIndexRoute
+  '/login': typeof LoginRoute
+  '/': typeof _requires_loginIndexRoute
+  '/admin/audit-log': typeof _requires_loginAdminAuditLogRoute
+  '/admin/certificates': typeof _requires_loginAdminCertificatesRoute
+  '/admin/review-queue': typeof _requires_loginAdminReviewQueueRoute
+  '/admin/users': typeof _requires_loginAdminUsersRoute
+  '/user/activity': typeof _requires_loginUserActivityRoute
+  '/user/my-certificates': typeof _requires_loginUserMyCertificatesRoute
+  '/user/profile': typeof _requires_loginUserProfileRoute
+  '/user/request-certificate': typeof _requires_loginUserRequestCertificateRoute
+  '/user/service-accounts': typeof _requires_loginUserServiceAccountsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRouteWithChildren
-  '/about': typeof AboutRoute
-  '/error': typeof ErrorRoute
-  '/blog/$slug': typeof BlogSlugRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/settings/service-accounts': typeof SettingsServiceAccountsRoute
-  '/blog/': typeof BlogIndexRoute
-  '/settings/': typeof SettingsIndexRoute
-  '/settings/certs/requests': typeof SettingsCertsRequestsRoute
-  '/settings/certs/settings': typeof SettingsCertsSettingsRoute
-  '/settings/certs/': typeof SettingsCertsIndexRoute
-  '/settings/firewall/': typeof SettingsFirewallIndexRoute
-  '/settings/certs/admin/requests': typeof SettingsCertsAdminRequestsRoute
-  '/settings/firewall/admin/': typeof SettingsFirewallAdminIndexRoute
+  '/__requires_login': typeof _requires_loginRouteWithChildren
+  '/login': typeof LoginRoute
+  '/__requires_login/': typeof _requires_loginIndexRoute
+  '/__requires_login/admin/audit-log': typeof _requires_loginAdminAuditLogRoute
+  '/__requires_login/admin/certificates': typeof _requires_loginAdminCertificatesRoute
+  '/__requires_login/admin/review-queue': typeof _requires_loginAdminReviewQueueRoute
+  '/__requires_login/admin/users': typeof _requires_loginAdminUsersRoute
+  '/__requires_login/user/activity': typeof _requires_loginUserActivityRoute
+  '/__requires_login/user/my-certificates': typeof _requires_loginUserMyCertificatesRoute
+  '/__requires_login/user/profile': typeof _requires_loginUserProfileRoute
+  '/__requires_login/user/request-certificate': typeof _requires_loginUserRequestCertificateRoute
+  '/__requires_login/user/service-accounts': typeof _requires_loginUserServiceAccountsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/settings'
-    | '/about'
-    | '/error'
-    | '/blog/$slug'
-    | '/settings/profile'
-    | '/settings/service-accounts'
-    | '/blog/'
-    | '/settings/'
-    | '/settings/certs/requests'
-    | '/settings/certs/settings'
-    | '/settings/certs/'
-    | '/settings/firewall/'
-    | '/settings/certs/admin/requests'
-    | '/settings/firewall/admin/'
+    | '/login'
+    | '/admin/audit-log'
+    | '/admin/certificates'
+    | '/admin/review-queue'
+    | '/admin/users'
+    | '/user/activity'
+    | '/user/my-certificates'
+    | '/user/profile'
+    | '/user/request-certificate'
+    | '/user/service-accounts'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/login'
     | '/'
-    | '/about'
-    | '/error'
-    | '/blog/$slug'
-    | '/settings/profile'
-    | '/settings/service-accounts'
-    | '/blog'
-    | '/settings'
-    | '/settings/certs/requests'
-    | '/settings/certs/settings'
-    | '/settings/certs'
-    | '/settings/firewall'
-    | '/settings/certs/admin/requests'
-    | '/settings/firewall/admin'
+    | '/admin/audit-log'
+    | '/admin/certificates'
+    | '/admin/review-queue'
+    | '/admin/users'
+    | '/user/activity'
+    | '/user/my-certificates'
+    | '/user/profile'
+    | '/user/request-certificate'
+    | '/user/service-accounts'
   id:
     | '__root__'
-    | '/'
-    | '/settings'
-    | '/about'
-    | '/error'
-    | '/blog/$slug'
-    | '/settings/profile'
-    | '/settings/service-accounts'
-    | '/blog/'
-    | '/settings/'
-    | '/settings/certs/requests'
-    | '/settings/certs/settings'
-    | '/settings/certs/'
-    | '/settings/firewall/'
-    | '/settings/certs/admin/requests'
-    | '/settings/firewall/admin/'
+    | '/__requires_login'
+    | '/login'
+    | '/__requires_login/'
+    | '/__requires_login/admin/audit-log'
+    | '/__requires_login/admin/certificates'
+    | '/__requires_login/admin/review-queue'
+    | '/__requires_login/admin/users'
+    | '/__requires_login/user/activity'
+    | '/__requires_login/user/my-certificates'
+    | '/__requires_login/user/profile'
+    | '/__requires_login/user/request-certificate'
+    | '/__requires_login/user/service-accounts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
-  AboutRoute: typeof AboutRoute
-  ErrorRoute: typeof ErrorRoute
-  BlogSlugRoute: typeof BlogSlugRoute
-  BlogIndexRoute: typeof BlogIndexRoute
+  _requires_loginRoute: typeof _requires_loginRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/error': {
-      id: '/error'
-      path: '/error'
-      fullPath: '/error'
-      preLoaderRoute: typeof ErrorRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/__requires_login': {
+      id: '/__requires_login'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof _requires_loginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/__requires_login/': {
+      id: '/__requires_login/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof _requires_loginIndexRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/': {
-      id: '/settings/'
-      path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/user/service-accounts': {
+      id: '/__requires_login/user/service-accounts'
+      path: '/user/service-accounts'
+      fullPath: '/user/service-accounts'
+      preLoaderRoute: typeof _requires_loginUserServiceAccountsRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/blog/': {
-      id: '/blog/'
-      path: '/blog'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof BlogIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/__requires_login/user/request-certificate': {
+      id: '/__requires_login/user/request-certificate'
+      path: '/user/request-certificate'
+      fullPath: '/user/request-certificate'
+      preLoaderRoute: typeof _requires_loginUserRequestCertificateRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/service-accounts': {
-      id: '/settings/service-accounts'
-      path: '/service-accounts'
-      fullPath: '/settings/service-accounts'
-      preLoaderRoute: typeof SettingsServiceAccountsRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/user/profile': {
+      id: '/__requires_login/user/profile'
+      path: '/user/profile'
+      fullPath: '/user/profile'
+      preLoaderRoute: typeof _requires_loginUserProfileRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/profile': {
-      id: '/settings/profile'
-      path: '/profile'
-      fullPath: '/settings/profile'
-      preLoaderRoute: typeof SettingsProfileRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/user/my-certificates': {
+      id: '/__requires_login/user/my-certificates'
+      path: '/user/my-certificates'
+      fullPath: '/user/my-certificates'
+      preLoaderRoute: typeof _requires_loginUserMyCertificatesRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/blog/$slug': {
-      id: '/blog/$slug'
-      path: '/blog/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
-      parentRoute: typeof rootRouteImport
+    '/__requires_login/user/activity': {
+      id: '/__requires_login/user/activity'
+      path: '/user/activity'
+      fullPath: '/user/activity'
+      preLoaderRoute: typeof _requires_loginUserActivityRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/firewall/': {
-      id: '/settings/firewall/'
-      path: '/firewall'
-      fullPath: '/settings/firewall/'
-      preLoaderRoute: typeof SettingsFirewallIndexRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/admin/users': {
+      id: '/__requires_login/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof _requires_loginAdminUsersRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/certs/': {
-      id: '/settings/certs/'
-      path: '/certs'
-      fullPath: '/settings/certs/'
-      preLoaderRoute: typeof SettingsCertsIndexRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/admin/review-queue': {
+      id: '/__requires_login/admin/review-queue'
+      path: '/admin/review-queue'
+      fullPath: '/admin/review-queue'
+      preLoaderRoute: typeof _requires_loginAdminReviewQueueRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/certs/settings': {
-      id: '/settings/certs/settings'
-      path: '/certs/settings'
-      fullPath: '/settings/certs/settings'
-      preLoaderRoute: typeof SettingsCertsSettingsRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/admin/certificates': {
+      id: '/__requires_login/admin/certificates'
+      path: '/admin/certificates'
+      fullPath: '/admin/certificates'
+      preLoaderRoute: typeof _requires_loginAdminCertificatesRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
-    '/settings/certs/requests': {
-      id: '/settings/certs/requests'
-      path: '/certs/requests'
-      fullPath: '/settings/certs/requests'
-      preLoaderRoute: typeof SettingsCertsRequestsRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/firewall/admin/': {
-      id: '/settings/firewall/admin/'
-      path: '/firewall/admin'
-      fullPath: '/settings/firewall/admin/'
-      preLoaderRoute: typeof SettingsFirewallAdminIndexRouteImport
-      parentRoute: typeof SettingsRouteRoute
-    }
-    '/settings/certs/admin/requests': {
-      id: '/settings/certs/admin/requests'
-      path: '/certs/admin/requests'
-      fullPath: '/settings/certs/admin/requests'
-      preLoaderRoute: typeof SettingsCertsAdminRequestsRouteImport
-      parentRoute: typeof SettingsRouteRoute
+    '/__requires_login/admin/audit-log': {
+      id: '/__requires_login/admin/audit-log'
+      path: '/admin/audit-log'
+      fullPath: '/admin/audit-log'
+      preLoaderRoute: typeof _requires_loginAdminAuditLogRouteImport
+      parentRoute: typeof _requires_loginRoute
     }
   }
 }
 
-interface SettingsRouteRouteChildren {
-  SettingsProfileRoute: typeof SettingsProfileRoute
-  SettingsServiceAccountsRoute: typeof SettingsServiceAccountsRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
-  SettingsCertsRequestsRoute: typeof SettingsCertsRequestsRoute
-  SettingsCertsSettingsRoute: typeof SettingsCertsSettingsRoute
-  SettingsCertsIndexRoute: typeof SettingsCertsIndexRoute
-  SettingsFirewallIndexRoute: typeof SettingsFirewallIndexRoute
-  SettingsCertsAdminRequestsRoute: typeof SettingsCertsAdminRequestsRoute
-  SettingsFirewallAdminIndexRoute: typeof SettingsFirewallAdminIndexRoute
+interface _requires_loginRouteChildren {
+  _requires_loginIndexRoute: typeof _requires_loginIndexRoute
+  _requires_loginAdminAuditLogRoute: typeof _requires_loginAdminAuditLogRoute
+  _requires_loginAdminCertificatesRoute: typeof _requires_loginAdminCertificatesRoute
+  _requires_loginAdminReviewQueueRoute: typeof _requires_loginAdminReviewQueueRoute
+  _requires_loginAdminUsersRoute: typeof _requires_loginAdminUsersRoute
+  _requires_loginUserActivityRoute: typeof _requires_loginUserActivityRoute
+  _requires_loginUserMyCertificatesRoute: typeof _requires_loginUserMyCertificatesRoute
+  _requires_loginUserProfileRoute: typeof _requires_loginUserProfileRoute
+  _requires_loginUserRequestCertificateRoute: typeof _requires_loginUserRequestCertificateRoute
+  _requires_loginUserServiceAccountsRoute: typeof _requires_loginUserServiceAccountsRoute
 }
 
-const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
-  SettingsProfileRoute: SettingsProfileRoute,
-  SettingsServiceAccountsRoute: SettingsServiceAccountsRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
-  SettingsCertsRequestsRoute: SettingsCertsRequestsRoute,
-  SettingsCertsSettingsRoute: SettingsCertsSettingsRoute,
-  SettingsCertsIndexRoute: SettingsCertsIndexRoute,
-  SettingsFirewallIndexRoute: SettingsFirewallIndexRoute,
-  SettingsCertsAdminRequestsRoute: SettingsCertsAdminRequestsRoute,
-  SettingsFirewallAdminIndexRoute: SettingsFirewallAdminIndexRoute,
+const _requires_loginRouteChildren: _requires_loginRouteChildren = {
+  _requires_loginIndexRoute: _requires_loginIndexRoute,
+  _requires_loginAdminAuditLogRoute: _requires_loginAdminAuditLogRoute,
+  _requires_loginAdminCertificatesRoute: _requires_loginAdminCertificatesRoute,
+  _requires_loginAdminReviewQueueRoute: _requires_loginAdminReviewQueueRoute,
+  _requires_loginAdminUsersRoute: _requires_loginAdminUsersRoute,
+  _requires_loginUserActivityRoute: _requires_loginUserActivityRoute,
+  _requires_loginUserMyCertificatesRoute:
+    _requires_loginUserMyCertificatesRoute,
+  _requires_loginUserProfileRoute: _requires_loginUserProfileRoute,
+  _requires_loginUserRequestCertificateRoute:
+    _requires_loginUserRequestCertificateRoute,
+  _requires_loginUserServiceAccountsRoute:
+    _requires_loginUserServiceAccountsRoute,
 }
 
-const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
-  SettingsRouteRouteChildren,
+const _requires_loginRouteWithChildren = _requires_loginRoute._addFileChildren(
+  _requires_loginRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  SettingsRouteRoute: SettingsRouteRouteWithChildren,
-  AboutRoute: AboutRoute,
-  ErrorRoute: ErrorRoute,
-  BlogSlugRoute: BlogSlugRoute,
-  BlogIndexRoute: BlogIndexRoute,
+  _requires_loginRoute: _requires_loginRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

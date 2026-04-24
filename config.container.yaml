@@ -1,0 +1,90 @@
+server:
+  port: 8080
+  external_url: "http://localhost:5173"
+  debug:
+    enabled: false
+    host: 0.0.0.0
+    port: 9000
+
+distributed:
+  enabled: false
+  ttl: '30s'
+
+log:
+  level: "debug"
+  format: "text"
+
+cors:
+  allowed_origins:
+    - "http://localhost:5173"
+  allowCredentials: true
+  maxAge: 300
+
+session:
+  store: 'local'
+  duration_source: 'fixed'
+  secure: false
+
+#redis:
+#  address: 'redis:6379'
+#  session_index: 0
+#  leader_index: 1
+
+storage:
+  enabled: true
+  host: 'postgres'
+  port: 5432
+  username: 'postgres'
+  password: 'password123'
+  database: 'conduit'
+  encryption_key: 'insecure_secret'
+
+authorization:
+  group_scopes:
+    conduit:mtls:admin:
+      - mtls:request
+      - mtls:read_all
+      - mtls:read
+      - mtls:approve
+      - mtls:renew
+      - mtls:revoke
+      - mtls:download_all
+      - mtls:download
+      - mtls:auto_approve
+    conduit:mtls:user:
+      - mtls:request
+      - mtls:read
+      - mtls:renew
+      - mtls:download
+
+mtls:
+  enabled: true
+  download_token_hmac_key: '738149dd1eb92cc2b73fbbf22e5eb8d6672acfca47181df34a8887faa9239f7c'
+  auto_approve_admin_requests: true
+  allow_admins_to_approve_own_requests: true
+  certificate_subject:
+    organization: "CrowleyBrynn Homelab"
+    country: "United States"
+    province: "California"
+    locality: "San Francisco"
+  database:
+    enabled: true
+    key_algorithm: "ECDSA-P256"
+#  kubernetes:
+#    enabled: false
+#    namespace: 'conduit'
+#    in_cluster: false
+#    issuer:
+#      name: "selfsigned-issuer"
+#      kind: "ClusterIssuer"
+
+oidc:
+  client_id: 'ajtw.ZW43QvHhUAs_Gb1sHzjdXiCARYW2d0yR6bQcSppL.AscxH_bXkguJjtcbl6R_WbuKzf'
+  client_secret: 'uo6vZsr~wFzj87IIiclI_o1twaCqgoDGp2.zcpPHoJ7XYiPkdxwObhm2c0TuYRorx0zJPSpK'
+  issuer_url: 'https://auth.crowleybrynn.com'
+  redirect_url: 'http://localhost:5173/api/auth/callback'
+  scopes:
+    - 'openid'
+    - 'profile'
+    - 'email'
+    - 'groups'

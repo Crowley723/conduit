@@ -51,7 +51,6 @@ func simplifyDatabaseError(err error) error {
 		return fmt.Errorf("failed to connect to %s: %v", netErr.Addr, netErr.Err)
 	}
 
-	// For other errors, try to extract just the essential message
 	errMsg := err.Error()
 	if strings.Contains(errMsg, "dial error:") {
 		parts := strings.Split(errMsg, "dial error: ")
@@ -119,7 +118,7 @@ func (p *DatabaseProvider) RunUpMigrations(ctx context.Context, targetVersion in
 		return fmt.Errorf("failed to get current migration version: %w", err)
 	}
 
-	if targetVersion <= currentVersion {
+	if targetVersion < currentVersion {
 		return fmt.Errorf("target version %d is not ahead of current version %d", targetVersion, currentVersion)
 	}
 

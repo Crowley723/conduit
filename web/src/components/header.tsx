@@ -7,8 +7,8 @@ import {
 import { Link } from '@tanstack/react-router';
 import { LoginDialog } from '@/components/LoginDialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { useAuth } from '@/hooks/useAuth.tsx';
 import UserDropdown from '@/components/UserDropdown.tsx';
+import { useAuth } from '@/hooks/useAuth.ts';
 
 export function Header() {
   const { login, isLoggingIn, logout, isAuthenticated, user } = useAuth();
@@ -24,11 +24,6 @@ export function Header() {
                 <Link to={'/'} search={{} as any}>
                   Home
                 </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link to={'/blog'}>Blog</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>

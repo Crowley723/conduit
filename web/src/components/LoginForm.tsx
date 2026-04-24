@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
-import { cn } from '@/lib/utils.ts';
+import { cn } from '@/services/Utils';
 import React from 'react';
 
 export function LoginForm({

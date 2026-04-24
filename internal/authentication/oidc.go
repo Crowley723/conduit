@@ -6,10 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"net/url"
+
 	"github.com/Crowley723/conduit/internal/config"
 	"github.com/Crowley723/conduit/internal/middlewares"
 	"github.com/Crowley723/conduit/internal/models"
-	"net/url"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
@@ -81,7 +82,7 @@ func (r *RealOIDCProvider) StartLogin(ctx *middlewares.AppContext) (string, erro
 
 	authURL := ctx.OIDCProvider.GetOAuth2Config().AuthCodeURL(state,
 		oauth2.SetAuthURLParam("nonce", nonce),
-		oauth2.SetAuthURLParam("prompt", "login"),
+		//oauth2.SetAuthURLParam("prompt", "login"),
 		oauth2.SetAuthURLParam("response_type", "code"),
 		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),

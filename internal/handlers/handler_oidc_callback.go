@@ -3,10 +3,11 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/Crowley723/conduit/internal/authentication"
-	"github.com/Crowley723/conduit/internal/middlewares"
 	"net/http"
 	"net/url"
+
+	"github.com/Crowley723/conduit/internal/authentication"
+	"github.com/Crowley723/conduit/internal/middlewares"
 )
 
 func GETCallbackHandler(ctx *middlewares.AppContext) {
@@ -91,12 +92,6 @@ func GETCallbackHandler(ctx *middlewares.AppContext) {
 		"username", user.Username,
 		"email", user.Email,
 	)
-
-	redirectTo := ctx.SessionManager.GetRedirectAfterLogin(ctx)
-	if redirectTo != "" {
-		ctx.Redirect(redirectTo, http.StatusFound)
-		return
-	}
 
 	ctx.Redirect("/", http.StatusFound)
 }

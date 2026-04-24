@@ -8,15 +8,10 @@ import (
 )
 
 type ConfigResponse struct {
-	MTLS     MTLSConfigResponse     `json:"mtls,omitempty"`
-	Firewall FirewallConfigResponse `json:"firewall,omitempty"`
+	MTLS MTLSConfigResponse `json:"mtls,omitempty"`
 }
 
 type MTLSConfigResponse struct {
-	Enabled bool `json:"enabled"`
-}
-
-type FirewallConfigResponse struct {
 	Enabled bool `json:"enabled"`
 }
 
@@ -32,7 +27,7 @@ func GETAuthStatusHandler(ctx *middlewares.AppContext) {
 	}
 
 	if !ctx.SessionManager.IsUserAuthenticated(ctx) {
-		ctx.WriteJSON(http.StatusUnauthorized, response)
+		ctx.WriteJSON(http.StatusOK, response)
 		return
 	}
 

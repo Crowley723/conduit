@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button.tsx';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar.tsx';
 import { ChevronDownIcon } from 'lucide-react';
-import type { User } from '@/api/auth.tsx';
+import type { User } from '@/services/auth.tsx';
 import { Link } from '@tanstack/react-router';
 
 const UserMenu = ({
@@ -49,7 +49,7 @@ const UserMenu = ({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to={'/settings/profile'}>Profile</Link>
+          <Link to={'/user/profile'}>Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to={'/settings'}>Settings</Link>

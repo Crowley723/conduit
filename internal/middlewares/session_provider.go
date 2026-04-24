@@ -1,9 +1,10 @@
 package middlewares
 
 import (
-	"github.com/Crowley723/conduit/internal/models"
 	"net/http"
 	"time"
+
+	"github.com/Crowley723/conduit/internal/models"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
@@ -19,8 +20,6 @@ type SessionProvider interface {
 	GetTokenExpiry(ctx *AppContext) (time.Time, bool)
 	SetCreatedAt(ctx *AppContext, createdAt time.Time)
 	GetCreatedAt(ctx *AppContext) (time.Time, bool)
-	SetRedirectAfterLogin(ctx *AppContext, redirectAfterLogin string)
-	GetRedirectAfterLogin(ctx *AppContext) string
 	SetOauthState(ctx *AppContext, state string)
 	GetOauthState(ctx *AppContext) string
 	ClearOauthState(ctx *AppContext)
